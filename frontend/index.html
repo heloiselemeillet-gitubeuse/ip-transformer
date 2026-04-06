@@ -1,1 +1,495 @@
-<!-- IP Transformer — Frontend principal -->
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IP Transformer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <!-- Stepper de navigation permanent -->
+  <nav id="stepper" class="stepper"></nav>
+
+  <!-- Conteneur principal des écrans -->
+  <main id="app">
+
+    <!-- ÉCRAN 0 : Accueil — choix du mode -->
+    <section id="screen-0" class="screen screen--active">
+      <div class="screen__content screen-0__content">
+
+        <!-- En-tête -->
+        <div class="screen-0__header">
+          <h1 class="screen-0__title">IP Transformer</h1>
+          <p class="screen-0__subtitle">
+            Réexploitez une IP existante en plusieurs formats<br>
+            sans repartir de zéro.
+          </p>
+        </div>
+
+        <!-- Choix du mode -->
+        <div class="screen-0__modes">
+
+          <!-- Mode Podcast -->
+          <button class="mode-card" id="mode-podcast" onclick="selectMode('podcast')">
+            <div class="mode-card__icon">🎙️</div>
+            <h2 class="mode-card__title">Podcast → Webtoon</h2>
+            <p class="mode-card__desc">
+              Transformez un podcast YouTube en webtoon narratif.
+              L'IA extrait les faits et citations réels.
+            </p>
+            <span class="mode-card__tag">DÉMO A</span>
+          </button>
+
+          <!-- Mode Peinture -->
+          <button class="mode-card" id="mode-peinture" onclick="selectMode('peinture')">
+            <div class="mode-card__icon">🎨</div>
+            <h2 class="mode-card__title">Peintures → Micro-drama</h2>
+            <p class="mode-card__desc">
+              Transformez des œuvres picturales en micro-drama vidéo
+              fidèle au style de l'artiste.
+            </p>
+            <span class="mode-card__tag">DÉMO B</span>
+          </button>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ÉCRAN 1 : Asset Loader -->
+    <section id="screen-1" class="screen">
+      <div class="screen__content">
+
+        <h2 class="screen__title">Chargez votre IP source</h2>
+
+        <!-- MODE PODCAST : lien YouTube + transcript -->
+        <div id="asset-podcast" class="asset-loader" style="display: none;">
+
+          <!-- Lien YouTube -->
+          <div class="card">
+            <h3 class="card__title">Lien YouTube</h3>
+            <p class="card__desc">Collez l'URL d'un podcast YouTube. Les sous-titres seront extraits automatiquement.</p>
+            <div class="input-group">
+              <input
+                type="url"
+                id="youtube-url"
+                class="input"
+                placeholder="https://www.youtube.com/watch?v=..."
+                oninput="validateYoutubeUrl()"
+              >
+              <button class="btn btn--primary" id="btn-fetch-transcript" onclick="fetchTranscript()" disabled>
+                Extraire le transcript
+              </button>
+            </div>
+            <div id="youtube-status" class="status-message"></div>
+          </div>
+
+          <!-- Upload transcript (alternative) -->
+          <div class="card">
+            <h3 class="card__title">Ou importez un transcript</h3>
+            <p class="card__desc">Fichier .txt, .srt ou .vtt déjà existant.</p>
+            <label class="upload-zone" id="transcript-upload-zone">
+              <input
+                type="file"
+                id="transcript-file"
+                accept=".txt,.srt,.vtt"
+                onchange="handleTranscriptUpload(event)"
+                hidden
+              >
+              <div class="upload-zone__content">
+                <span class="upload-zone__icon">📄</span>
+                <span class="upload-zone__text">Cliquez ou glissez un fichier ici</span>
+                <span class="upload-zone__formats">.txt, .srt, .vtt</span>
+              </div>
+            </label>
+            <div id="transcript-file-status" class="status-message"></div>
+          </div>
+
+        </div>
+
+        <!-- MODE PEINTURE : upload d'œuvres -->
+        <div id="asset-peinture" class="asset-loader" style="display: none;">
+
+          <div class="card">
+            <h3 class="card__title">Uploadez vos œuvres</h3>
+            <p class="card__desc">3 à 10 images (JPG, PNG ou WebP, max 5 Mo chacune).</p>
+            <label class="upload-zone upload-zone--large" id="paintings-upload-zone">
+              <input
+                type="file"
+                id="paintings-files"
+                accept="image/jpeg,image/png,image/webp"
+                multiple
+                onchange="handlePaintingsUpload(event)"
+                hidden
+              >
+              <div class="upload-zone__content">
+                <span class="upload-zone__icon">🎨</span>
+                <span class="upload-zone__text">Cliquez ou glissez vos œuvres ici</span>
+                <span class="upload-zone__formats">JPG, PNG, WebP — 3 à 10 images</span>
+              </div>
+            </label>
+            <div id="paintings-status" class="status-message"></div>
+
+            <!-- Grille de prévisualisation -->
+            <div id="paintings-preview" class="paintings-grid"></div>
+          </div>
+
+        </div>
+
+        <!-- Zone de chargement -->
+        <div id="screen-1-loading"></div>
+
+        <!-- Navigation -->
+        <div class="screen__nav">
+          <button class="btn btn--secondary" onclick="prevScreen()">← Retour</button>
+          <button class="btn btn--primary" id="btn-next-screen1" onclick="nextScreen()" disabled>
+            Continuer →
+          </button>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ÉCRAN 2 : Analyse IA de l'IP source -->
+    <section id="screen-2" class="screen">
+      <div class="screen__content">
+
+        <h2 class="screen__title">Analyse de votre IP</h2>
+        <p class="screen__desc">L'IA analyse votre source pour en extraire les éléments clés.</p>
+
+        <!-- Zone de chargement (affiché pendant l'analyse) -->
+        <div id="screen-2-loading"></div>
+
+        <!-- Résultat de l'analyse (masqué pendant le chargement) -->
+        <div id="screen-2-result" style="display: none;">
+
+          <!-- Mode Podcast : faits, citations, intervenants -->
+          <div id="analysis-podcast" style="display: none;">
+            <div class="card">
+              <h3 class="card__title">Intervenants identifiés</h3>
+              <div id="analysis-speakers" class="analysis-list"></div>
+            </div>
+            <div class="card">
+              <h3 class="card__title">Thèmes et faits clés</h3>
+              <div id="analysis-facts" class="analysis-list"></div>
+            </div>
+            <div class="card">
+              <h3 class="card__title">Citations marquantes</h3>
+              <div id="analysis-quotes" class="analysis-quotes"></div>
+            </div>
+          </div>
+
+          <!-- Mode Peinture : univers visuel, palette, ambiance -->
+          <div id="analysis-peinture" style="display: none;">
+            <div class="card">
+              <h3 class="card__title">Univers visuel</h3>
+              <div id="analysis-visual" class="analysis-text"></div>
+            </div>
+            <div class="card">
+              <h3 class="card__title">Palette & Ambiance</h3>
+              <div id="analysis-palette" class="analysis-palette-row"></div>
+              <div id="analysis-mood" class="analysis-text"></div>
+            </div>
+            <div class="card">
+              <h3 class="card__title">Personnages & Éléments récurrents</h3>
+              <div id="analysis-elements" class="analysis-list"></div>
+            </div>
+          </div>
+
+          <!-- Bouton régénérer -->
+          <div class="action-row">
+            <button class="btn btn--secondary" onclick="runAnalysis()">Régénérer l'analyse</button>
+          </div>
+
+        </div>
+
+        <!-- Navigation -->
+        <div class="screen__nav">
+          <button class="btn btn--secondary" onclick="prevScreen()">← Retour</button>
+          <button class="btn btn--primary" id="btn-next-screen2" onclick="nextScreen()" disabled>
+            Continuer →
+          </button>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ÉCRAN 3 : Histoire structurée -->
+    <section id="screen-3" class="screen">
+      <div class="screen__content">
+
+        <h2 class="screen__title">Histoire structurée</h2>
+        <p class="screen__desc">L'IA construit une histoire narrative fidèle à votre IP source.</p>
+
+        <!-- Zone de chargement -->
+        <div id="screen-3-loading"></div>
+
+        <!-- Résultat de l'histoire -->
+        <div id="screen-3-result" style="display: none;">
+
+          <!-- Synopsis -->
+          <div class="card">
+            <h3 class="card__title">Synopsis</h3>
+            <div id="story-synopsis" class="story-text"></div>
+          </div>
+
+          <!-- Personnages -->
+          <div class="card">
+            <h3 class="card__title">Personnages</h3>
+            <div id="story-characters" class="characters-grid"></div>
+          </div>
+
+          <!-- Arcs narratifs -->
+          <div class="card">
+            <h3 class="card__title">Arcs narratifs</h3>
+            <div id="story-arcs" class="arcs-list"></div>
+          </div>
+
+          <!-- Ton & Ambiance -->
+          <div class="card">
+            <h3 class="card__title">Ton & Ambiance</h3>
+            <div id="story-tone" class="story-text"></div>
+          </div>
+
+          <!-- Actions -->
+          <div class="action-row">
+            <button class="btn btn--secondary" onclick="runStory()">Régénérer l'histoire</button>
+          </div>
+
+        </div>
+
+        <!-- Navigation -->
+        <div class="screen__nav">
+          <button class="btn btn--secondary" onclick="prevScreen()">← Retour</button>
+          <button class="btn btn--primary" id="btn-next-screen3" onclick="nextScreen()" disabled>
+            Continuer →
+          </button>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ÉCRAN 3b : Canon IP / Bible de marque -->
+    <section id="screen-3b" class="screen">
+      <div class="screen__content">
+
+        <h2 class="screen__title">Canon IP — Bible de marque</h2>
+        <p class="screen__desc">
+          Ce canon sera envoyé dans chaque prompt IA suivant. C'est le verrou de fidélité de votre IP.
+          Vérifiez et ajustez avant de continuer.
+        </p>
+
+        <!-- Zone de chargement -->
+        <div id="screen-3b-loading"></div>
+
+        <!-- Résultat du canon -->
+        <div id="screen-3b-result" style="display: none;">
+
+          <!-- Personnages avec références visuelles -->
+          <div class="card">
+            <h3 class="card__title">Personnages</h3>
+            <p class="card__desc">Uploadez une photo de référence pour chaque personnage (optionnel mais recommandé).</p>
+            <div id="canon-characters" class="canon-characters"></div>
+          </div>
+
+          <!-- Univers -->
+          <div class="card">
+            <h3 class="card__title">Univers</h3>
+            <textarea id="canon-universe" class="textarea" rows="4" placeholder="Description de l'univers…"></textarea>
+          </div>
+
+          <!-- Ton & Style -->
+          <div class="card">
+            <h3 class="card__title">Ton & Style narratif</h3>
+            <textarea id="canon-tone" class="textarea" rows="3" placeholder="Ton, registre de langue, ambiance…"></textarea>
+          </div>
+
+          <!-- Contraintes -->
+          <div class="card">
+            <h3 class="card__title">Contraintes & Interdits</h3>
+            <textarea id="canon-constraints" class="textarea" rows="3" placeholder="Ce que l'IA ne doit PAS faire…"></textarea>
+          </div>
+
+          <!-- Références visuelles globales (mode peinture) -->
+          <div id="canon-visual-refs" style="display: none;">
+            <div class="card">
+              <h3 class="card__title">Références visuelles</h3>
+              <p class="card__desc">Palette et style visuel à respecter pour les générations d'images.</p>
+              <div id="canon-palette" class="analysis-palette-row"></div>
+              <textarea id="canon-visual-style" class="textarea" rows="3" placeholder="Style visuel à respecter…" style="margin-top:16px"></textarea>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="action-row">
+            <button class="btn btn--secondary" onclick="regenerateCanon()">Régénérer le canon</button>
+            <button class="btn btn--primary" onclick="saveCanon()">Valider le canon</button>
+          </div>
+
+        </div>
+
+        <!-- Navigation -->
+        <div class="screen__nav">
+          <button class="btn btn--secondary" onclick="prevScreen()">← Retour</button>
+          <button class="btn btn--primary" id="btn-next-screen3b" onclick="nextScreen()" disabled>
+            Continuer →
+          </button>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ÉCRAN 4 : Découpage en 5 épisodes -->
+    <section id="screen-4" class="screen">
+      <div class="screen__content">
+
+        <h2 class="screen__title">Découpage en 5 épisodes</h2>
+        <p class="screen__desc">L'IA découpe votre histoire en 5 épisodes narratifs.</p>
+
+        <!-- Zone de chargement -->
+        <div id="screen-4-loading"></div>
+
+        <!-- Résultat des épisodes -->
+        <div id="screen-4-result" style="display: none;">
+
+          <div id="episodes-list" class="episodes-list"></div>
+
+          <!-- Actions -->
+          <div class="action-row">
+            <button class="btn btn--secondary" onclick="runEpisodes()">Régénérer le découpage</button>
+          </div>
+
+        </div>
+
+        <!-- Navigation -->
+        <div class="screen__nav">
+          <button class="btn btn--secondary" onclick="prevScreen()">← Retour</button>
+          <button class="btn btn--primary" id="btn-next-screen4" onclick="nextScreen()" disabled>
+            Continuer →
+          </button>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ÉCRAN 5 : Scripts détaillés -->
+    <section id="screen-5" class="screen">
+      <div class="screen__content">
+
+        <h2 class="screen__title">Scripts détaillés</h2>
+        <p class="screen__desc">3 sous-scènes par épisode, avec descriptions visuelles et dialogues.</p>
+
+        <!-- Sélecteur d'épisode -->
+        <div class="episode-tabs" id="script-tabs"></div>
+
+        <!-- Zone de chargement -->
+        <div id="screen-5-loading"></div>
+
+        <!-- Résultat du script -->
+        <div id="screen-5-result" style="display: none;">
+
+          <div id="script-scenes" class="scenes-list"></div>
+
+          <!-- Actions -->
+          <div class="action-row">
+            <button class="btn btn--secondary" onclick="regenerateCurrentScript()">Régénérer ce script</button>
+          </div>
+
+        </div>
+
+        <!-- Navigation -->
+        <div class="screen__nav">
+          <button class="btn btn--secondary" onclick="prevScreen()">← Retour</button>
+          <button class="btn btn--primary" id="btn-next-screen5" onclick="nextScreen()" disabled>
+            Continuer →
+          </button>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ÉCRAN 5b : Choix du format de sortie -->
+    <section id="screen-5b" class="screen">
+      <div class="screen__content screen-5b__content">
+
+        <div class="screen-5b__header">
+          <h2 class="screen__title">Choisissez le format de sortie</h2>
+          <p class="screen__desc">Sélectionnez le format dans lequel vous souhaitez produire vos épisodes.</p>
+        </div>
+
+        <!-- Choix du format -->
+        <div class="format-choices">
+
+          <!-- Webtoon -->
+          <button class="format-card" id="format-webtoon" onclick="selectFormat('webtoon')">
+            <div class="format-card__icon">📖</div>
+            <h3 class="format-card__title">Webtoon</h3>
+            <p class="format-card__desc">
+              3 images empilées verticalement avec bulles de dialogue.
+              Export en JPEG long.
+            </p>
+            <ul class="format-card__specs">
+              <li>720px de large</li>
+              <li>Gouttières 20-60px</li>
+              <li>Bulles auto-placées</li>
+            </ul>
+          </button>
+
+          <!-- Micro-drama -->
+          <button class="format-card" id="format-micro-drama" onclick="selectFormat('micro-drama')">
+            <div class="format-card__icon">🎬</div>
+            <h3 class="format-card__title">Micro-drama</h3>
+            <p class="format-card__desc">
+              3 clips vidéo de ~15s assemblés avec musique.
+              Format vertical 9:16.
+            </p>
+            <ul class="format-card__specs">
+              <li>~45 secondes/épisode</li>
+              <li>Musique libre de droits</li>
+              <li>Desktop uniquement</li>
+            </ul>
+          </button>
+
+          <!-- Les deux -->
+          <button class="format-card" id="format-both" onclick="selectFormat('both')">
+            <div class="format-card__icon">✨</div>
+            <h3 class="format-card__title">Les deux</h3>
+            <p class="format-card__desc">
+              Produisez à la fois le webtoon et le micro-drama
+              pour chaque épisode.
+            </p>
+            <ul class="format-card__specs">
+              <li>Double production</li>
+              <li>Cohérence cross-format</li>
+              <li>Maximum d'impact</li>
+            </ul>
+          </button>
+
+        </div>
+
+        <!-- Navigation -->
+        <div class="screen__nav">
+          <button class="btn btn--secondary" onclick="prevScreen()">← Retour</button>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Les écrans suivants seront ajoutés ici au fur et à mesure -->
+
+  </main>
+
+  <!-- Scripts -->
+  <script src="js/db.js"></script>
+  <script src="js/state.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/loading.js"></script>
+  <script src="js/stepper.js"></script>
+  <script src="js/app.js"></script>
+
+</body>
+</html>

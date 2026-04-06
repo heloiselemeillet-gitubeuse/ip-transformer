@@ -1,0 +1,88 @@
+// state.js — Gestion d'état centralisée (localStorage)
+// Stocke les données légères : navigation, choix, textes, canon IP
+
+const STATE_KEY = 'ip-transformer-state';
+
+/**
+ * État global de l'application
+ * Toutes les données légères sont centralisées ici
+ */
+const State = {
+  // Navigation
+  currentScreen: 'screen-0',
+  mode: null,             // 'podcast' ou 'peinture'
+  outputFormat: null,     // 'webtoon', 'micro-drama' ou 'both'
+
+  // Écran 1 — Asset Loader
+  youtubeUrl: null,       // Lien YouTube (mode podcast)
+  transcriptText: null,   // Texte du transcript (mode podcast)
+  transcriptSource: null, // 'youtube-subs', 'whisper' ou 'file-upload'
+  paintingCount: 0,       // Nombre d'œuvres uploadées (mode peinture)
+
+  // Écran 2 — Analyse
+  analysis: null,         // Résultat de l'analyse IA
+
+  // Écran 3 — Histoire
+  story: null,            // Histoire structurée
+
+  // Écran 3b — Canon IP
+  canonIP: null,          // Bible de marque / verrou de fidélité
+
+  // Écran 4 — Épisodes
+  episodes: null,         // Découpage en 5 épisodes
+
+  // Écran 5 — Scripts
+  scripts: null,          // Scripts détaillés par épisode
+
+  /**
+   * Sauvegarde l'état complet dans localStorage
+   */
+  save() {
+    const data = {};
+    // Copier toutes les propriétés non-fonctions
+    for (const key of Object.keys(this)) {
+      if (typeof this[key] !== 'function') {
+        data[key] = this[key];
+      }
+    }
+    localStorage.setItem(STATE_KEY, JSON.stringify(data));
+  },
+
+  /**
+   * Restaure l'état depuis localStorage
+   */
+  load() {
+    const saved = localStorage.getItem(STATE_KEY);
+    if (!saved) return;
+
+    try {
+      const data = JSON.parse(saved);
+      for (const key of Object.keys(data)) {
+        if (key in this && typeof this[key] !== 'function') {
+          this[key] = data[key];
+        }
+      }
+    } catch (e) {
+      console.warn('État corrompu, réinitialisation.', e);
+    }
+  },
+
+  /**
+   * Réinitialise l'état complet
+   */
+  reset() {
+    localStorage.removeItem(STATE_KEY);
+    this.currentScreen = 'screen-0';
+    this.mode = null;
+    this.outputFormat = null;
+    this.youtubeUrl = null;
+    this.transcriptText = null;
+    this.transcriptSource = null;
+    this.paintingCount = 0;
+    this.analysis = null;
+    this.story = null;
+    this.canonIP = null;
+    this.episodes = null;
+    this.scripts = null;
+  },
+};
