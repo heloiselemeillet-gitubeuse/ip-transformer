@@ -40,6 +40,13 @@ const State = {
   // Écran 7 — Images générées
   generatedImages: null,  // { [episodeNum]: [{ url, status, sceneIndex, prompt }] }
 
+  // Écran 9 — Config animation
+  animationConfig: null,  // { [episodeNum]: { [sceneNum]: { type, kbDirection } } }
+  selectedMusic: null,    // id de la track musicale choisie
+
+  // Écran 10 — Clips vidéo générés
+  generatedClips: null,   // { [episodeNum]: { [sceneNum]: { status, url, isKenBurns, kbDirection } } }
+
   /**
    * Sauvegarde l'état complet dans localStorage
    */
@@ -92,5 +99,8 @@ const State = {
     this.scripts = null;
     this.visualStyle = null;
     this.generatedImages = null;
+    this.animationConfig = null;
+    this.selectedMusic = null;
+    this.generatedClips = null;
   },
 };

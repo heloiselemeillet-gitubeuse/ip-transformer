@@ -584,6 +584,151 @@
       </div>
     </section>
 
+    <!-- ÉCRAN 9 : Configuration animation + musique -->
+    <section id="screen-9" class="screen">
+      <div class="screen__content">
+
+        <h2 class="screen__title">Configuration animation</h2>
+        <p class="screen__desc">Choisissez le type d'animation par sous-scène et la musique d'ambiance.</p>
+
+        <!-- Onglets épisodes -->
+        <div class="episode-tabs" id="anim-tabs"></div>
+
+        <!-- Config des sous-scènes -->
+        <div id="anim-scenes-config" class="anim-scenes-config"></div>
+
+        <!-- Appliquer à tous -->
+        <div class="action-row">
+          <button class="btn btn--secondary" onclick="applyConfigToAll()">Appliquer la config EP1 à tous</button>
+        </div>
+
+        <!-- Sélecteur de musique -->
+        <div class="card">
+          <h3 class="card__title">Musique d'ambiance</h3>
+          <p class="card__desc">Choisissez une musique libre de droits pour vos épisodes.</p>
+          <div id="music-selector" class="music-selector"></div>
+        </div>
+
+        <!-- Estimation de coût -->
+        <div class="card">
+          <h3 class="card__title">Estimation</h3>
+          <div id="cost-estimate"></div>
+        </div>
+
+        <!-- Navigation -->
+        <div class="screen__nav">
+          <button class="btn btn--secondary" onclick="prevScreen()">← Retour</button>
+          <button class="btn btn--primary" id="btn-next-screen9" onclick="nextScreen()" disabled>
+            Continuer →
+          </button>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ÉCRAN 10 : Génération des clips vidéo -->
+    <section id="screen-10" class="screen">
+      <div class="screen__content">
+
+        <h2 class="screen__title">Génération des clips</h2>
+        <p class="screen__desc">Générez, prévisualisez et approuvez chaque clip vidéo.</p>
+
+        <!-- Onglets épisodes -->
+        <div class="episode-tabs" id="video-tabs"></div>
+
+        <!-- Zone de chargement -->
+        <div id="screen-10-loading"></div>
+
+        <!-- Résultat -->
+        <div id="screen-10-result" style="display: none;">
+          <div id="video-clips-grid" class="video-clips-grid"></div>
+
+          <!-- Actions -->
+          <div class="action-row">
+            <button class="btn btn--primary" id="btn-gen-all-clips" onclick="generateAllClips()">
+              Générer tous les clips
+            </button>
+            <button class="btn btn--secondary" id="btn-video-auto-batch" onclick="startVideoAutoBatch()" style="display: none;">
+              Auto-batch épisodes 2-5
+            </button>
+          </div>
+        </div>
+
+        <!-- Navigation -->
+        <div class="screen__nav">
+          <button class="btn btn--secondary" onclick="prevScreen()">← Retour</button>
+          <button class="btn btn--primary" id="btn-next-screen10" onclick="nextScreen()" disabled>
+            Continuer →
+          </button>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ÉCRAN 11 : Assemblage vidéo (timeline) -->
+    <section id="screen-11" class="screen">
+      <div class="screen__content">
+
+        <h2 class="screen__title">Assemblage vidéo</h2>
+        <p class="screen__desc">Visualisez la timeline et assemblez vos épisodes via ffmpeg.wasm.</p>
+
+        <!-- Avertissement desktop -->
+        <div id="ffmpeg-warning" style="display: none;"></div>
+
+        <!-- Onglets épisodes -->
+        <div class="episode-tabs" id="timeline-tabs"></div>
+
+        <!-- Zone de chargement -->
+        <div id="screen-11-loading"></div>
+
+        <!-- Contenu timeline -->
+        <div id="timeline-content"></div>
+
+        <!-- Actions -->
+        <div class="action-row">
+          <button class="btn btn--primary" onclick="assembleCurrentEpisode()">
+            Assembler cet épisode
+          </button>
+          <button class="btn btn--secondary" onclick="assembleAllEpisodes()">
+            Assembler tous les épisodes
+          </button>
+        </div>
+
+        <!-- Navigation -->
+        <div class="screen__nav">
+          <button class="btn btn--secondary" onclick="prevScreen()">← Retour</button>
+          <button class="btn btn--primary" id="btn-next-screen11" onclick="nextScreen()" disabled>
+            Continuer →
+          </button>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ÉCRAN 12 : Export vidéo -->
+    <section id="screen-12" class="screen">
+      <div class="screen__content">
+
+        <h2 class="screen__title">Export vidéo</h2>
+        <p class="screen__desc">Prévisualisez et téléchargez vos micro-dramas.</p>
+
+        <!-- Onglets épisodes -->
+        <div class="episode-tabs" id="export-tabs"></div>
+
+        <!-- Zone de chargement -->
+        <div id="screen-12-loading"></div>
+
+        <!-- Contenu export -->
+        <div id="export-content"></div>
+
+        <!-- Navigation -->
+        <div class="screen__nav">
+          <button class="btn btn--secondary" onclick="prevScreen()">← Retour</button>
+        </div>
+
+      </div>
+    </section>
+
     <!-- Overlay slideshow -->
     <div id="slideshow-overlay" class="slideshow-overlay" style="display: none;"></div>
 
@@ -601,6 +746,12 @@
   <script src="js/visuals.js"></script>
   <script src="js/image-gen.js"></script>
   <script src="js/storyboard.js"></script>
+  <script src="js/music.js"></script>
+  <script src="js/animation.js"></script>
+  <script src="js/video-gen.js"></script>
+  <script src="js/ffmpeg-engine.js"></script>
+  <script src="js/timeline.js"></script>
+  <script src="js/export.js"></script>
   <script src="js/app.js"></script>
 
 </body>

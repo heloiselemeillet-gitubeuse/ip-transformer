@@ -19,10 +19,10 @@ const SCREENS = [
   { id: 'screen-7', label: 'Révision', step: 7, branch: 'both' },
   { id: 'screen-8', label: 'Validation', step: 8, branch: 'both' },
   // Branche Micro-drama uniquement
-  { id: 'screen-9', label: 'Vidéo', step: 9, branch: 'micro-drama' },
-  { id: 'screen-10', label: 'Musique', step: 10, branch: 'micro-drama' },
+  { id: 'screen-9', label: 'Animation', step: 9, branch: 'micro-drama' },
+  { id: 'screen-10', label: 'Clips', step: 10, branch: 'micro-drama' },
   { id: 'screen-11', label: 'Assemblage', step: 11, branch: 'micro-drama' },
-  { id: 'screen-12', label: 'Export Vidéo', step: 12, branch: 'micro-drama' },
+  { id: 'screen-12', label: 'Export', step: 12, branch: 'micro-drama' },
   // Branche Webtoon uniquement
   { id: 'screen-13', label: 'Export Webtoon', step: 13, branch: 'webtoon' },
 ];
@@ -93,6 +93,10 @@ function navigateTo(screenId) {
   if (screenId === 'screen-6') initScreen6();
   if (screenId === 'screen-7') initScreen7();
   if (screenId === 'screen-8') initScreen8();
+  if (screenId === 'screen-9') initScreen9();
+  if (screenId === 'screen-10') initScreen10();
+  if (screenId === 'screen-11') initScreen11();
+  if (screenId === 'screen-12') initScreen12();
 
   // Mettre à jour l'URL (hash)
   window.location.hash = screenId;
