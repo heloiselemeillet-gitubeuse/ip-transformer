@@ -1,0 +1,32 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "Frontend (static)",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["serve", "frontend", "-l", "3000"],
+      "port": 3000
+    },
+    {
+      "name": "Worker API Proxy",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["wrangler", "dev", "--port", "8787"],
+      "cwd": "workers/api-proxy",
+      "port": 8787
+    },
+    {
+      "name": "Worker Replicate Proxy",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["wrangler", "dev", "--port", "8788"],
+      "cwd": "workers/replicate-proxy",
+      "port": 8788
+    },
+    {
+      "name": "Worker YouTube Proxy",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["wrangler", "dev", "--port", "8789"],
+      "cwd": "workers/youtube-proxy",
+      "port": 8789
+    }
+  ]
+}
