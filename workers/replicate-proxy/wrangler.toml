@@ -1,1 +1,7 @@
 # Configuration Wrangler — Replicate Proxy
+name = "replicate-proxy"
+main = "index.js"
+compatibility_date = "2024-01-01"
+
+# Le secret REPLICATE_API_TOKEN doit être ajouté via :
+# wrangler secret put REPLICATE_API_TOKEN

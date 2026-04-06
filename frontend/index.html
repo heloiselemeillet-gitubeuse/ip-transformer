@@ -479,6 +479,114 @@
       </div>
     </section>
 
+    <!-- ÉCRAN 6 : Style visuel -->
+    <section id="screen-6" class="screen">
+      <div class="screen__content">
+
+        <h2 class="screen__title">Style visuel</h2>
+        <p class="screen__desc">Choisissez un style et une palette. Générez un aperçu pour comparer.</p>
+
+        <!-- Cartes de style -->
+        <div class="card">
+          <h3 class="card__title">Style</h3>
+          <div id="style-cards" class="style-cards-grid"></div>
+        </div>
+
+        <!-- Palette -->
+        <div class="card">
+          <h3 class="card__title">Palette de couleurs</h3>
+          <div class="palette-row">
+            <div>
+              <h4 class="palette-row__label">Température</h4>
+              <div id="palette-temperature" class="palette-btns"></div>
+            </div>
+            <div>
+              <h4 class="palette-row__label">Contraste</h4>
+              <div id="palette-contrast" class="palette-btns"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Navigation -->
+        <div class="screen__nav">
+          <button class="btn btn--secondary" onclick="prevScreen()">← Retour</button>
+          <button class="btn btn--primary" id="btn-next-screen6" onclick="nextScreen()" disabled>
+            Continuer →
+          </button>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ÉCRAN 7 : Génération d'images -->
+    <section id="screen-7" class="screen">
+      <div class="screen__content">
+
+        <h2 class="screen__title">Génération d'images</h2>
+        <p class="screen__desc">3 images par épisode. Approuvez ou régénérez chaque image.</p>
+
+        <!-- Onglets épisodes -->
+        <div class="episode-tabs" id="gen-tabs"></div>
+
+        <!-- Zone de chargement -->
+        <div id="screen-7-loading"></div>
+
+        <!-- Résultat -->
+        <div id="screen-7-result" style="display: none;">
+          <div id="gen-images-grid" class="gen-images-grid"></div>
+
+          <!-- Auto-batch -->
+          <div class="action-row">
+            <button class="btn btn--secondary" id="btn-auto-batch" onclick="startAutoBatch()" style="display: none;">
+              Auto-batch épisodes 2-5
+            </button>
+          </div>
+        </div>
+
+        <!-- Navigation -->
+        <div class="screen__nav">
+          <button class="btn btn--secondary" onclick="prevScreen()">← Retour</button>
+          <button class="btn btn--primary" id="btn-next-screen7" onclick="nextScreen()" disabled>
+            Continuer →
+          </button>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ÉCRAN 8 : Storyboard -->
+    <section id="screen-8" class="screen">
+      <div class="screen__content">
+
+        <h2 class="screen__title">Storyboard</h2>
+        <p class="screen__desc">Prévisualisez vos épisodes avec les images, transitions et dialogues.</p>
+
+        <!-- Onglets épisodes -->
+        <div class="episode-tabs" id="storyboard-tabs"></div>
+
+        <!-- Contenu storyboard -->
+        <div id="storyboard-content"></div>
+
+        <!-- Actions -->
+        <div class="action-row">
+          <button class="btn btn--secondary" onclick="startSlideshow()">Slideshow</button>
+          <button class="btn btn--secondary" onclick="exportStoryboardHTML()">Exporter HTML</button>
+        </div>
+
+        <!-- Navigation -->
+        <div class="screen__nav">
+          <button class="btn btn--secondary" onclick="prevScreen()">← Retour</button>
+          <button class="btn btn--primary" id="btn-next-screen8" onclick="nextScreen()" disabled>
+            Continuer →
+          </button>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Overlay slideshow -->
+    <div id="slideshow-overlay" class="slideshow-overlay" style="display: none;"></div>
+
     <!-- Les écrans suivants seront ajoutés ici au fur et à mesure -->
 
   </main>
@@ -487,8 +595,12 @@
   <script src="js/db.js"></script>
   <script src="js/state.js"></script>
   <script src="js/api.js"></script>
+  <script src="js/replicate-api.js"></script>
   <script src="js/loading.js"></script>
   <script src="js/stepper.js"></script>
+  <script src="js/visuals.js"></script>
+  <script src="js/image-gen.js"></script>
+  <script src="js/storyboard.js"></script>
   <script src="js/app.js"></script>
 
 </body>

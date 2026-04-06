@@ -34,6 +34,12 @@ const State = {
   // Écran 5 — Scripts
   scripts: null,          // Scripts détaillés par épisode
 
+  // Écran 6 — Style visuel
+  visualStyle: null,      // { styleId, styleLabel, stylePrompt, temperature, contrast }
+
+  // Écran 7 — Images générées
+  generatedImages: null,  // { [episodeNum]: [{ url, status, sceneIndex, prompt }] }
+
   /**
    * Sauvegarde l'état complet dans localStorage
    */
@@ -84,5 +90,7 @@ const State = {
     this.canonIP = null;
     this.episodes = null;
     this.scripts = null;
+    this.visualStyle = null;
+    this.generatedImages = null;
   },
 };
