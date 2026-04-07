@@ -729,10 +729,64 @@
       </div>
     </section>
 
+    <!-- ÉCRAN 13 : Éditeur Webtoon -->
+    <section id="screen-13" class="screen">
+      <div class="screen__content">
+
+        <h2 class="screen__title">Éditeur Webtoon</h2>
+        <p class="screen__desc">Positionnez les bulles de dialogue, ajustez les gouttières et exportez en JPEG.</p>
+
+        <!-- Onglets épisodes -->
+        <div class="episode-tabs" id="webtoon-tabs"></div>
+
+        <!-- Contrôles gouttière -->
+        <div class="card wt-controls">
+          <div class="wt-controls__row">
+            <label class="wt-controls__label">Gouttière globale :</label>
+            <input type="range" id="gutter-slider" min="20" max="80" value="30" class="wt-controls__slider">
+            <span id="gutter-value" class="wt-controls__value">30px</span>
+          </div>
+        </div>
+
+        <!-- Zone de chargement -->
+        <div id="screen-13-loading"></div>
+
+        <!-- Éditeur + Preview côte à côte -->
+        <div class="wt-layout">
+          <!-- Éditeur principal (720px) -->
+          <div class="wt-layout__editor">
+            <div id="webtoon-editor" class="wt-editor"></div>
+          </div>
+
+          <!-- Preview mobile (360px) -->
+          <div class="wt-layout__preview">
+            <div class="wt-preview-frame">
+              <div class="wt-preview-frame__label">Preview mobile</div>
+              <div id="wt-preview" class="wt-preview"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="action-row">
+          <button class="btn btn--primary" onclick="exportWebtoonJPEG(currentWebtoonEpisode)">
+            Exporter JPEG
+          </button>
+          <button class="btn btn--secondary" onclick="exportAllWebtoons()">
+            Exporter tous les épisodes
+          </button>
+        </div>
+
+        <!-- Navigation -->
+        <div class="screen__nav">
+          <button class="btn btn--secondary" onclick="prevScreen()">← Retour</button>
+        </div>
+
+      </div>
+    </section>
+
     <!-- Overlay slideshow -->
     <div id="slideshow-overlay" class="slideshow-overlay" style="display: none;"></div>
-
-    <!-- Les écrans suivants seront ajoutés ici au fur et à mesure -->
 
   </main>
 
@@ -752,6 +806,8 @@
   <script src="js/ffmpeg-engine.js"></script>
   <script src="js/timeline.js"></script>
   <script src="js/export.js"></script>
+  <script src="js/webtoon-editor.js"></script>
+  <script src="js/webtoon-export.js"></script>
   <script src="js/app.js"></script>
 
 </body>

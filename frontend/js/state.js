@@ -47,6 +47,10 @@ const State = {
   // Écran 10 — Clips vidéo générés
   generatedClips: null,   // { [episodeNum]: { [sceneNum]: { status, url, isKenBurns, kbDirection } } }
 
+  // Écran 13 — Webtoon
+  webtoonData: null,      // { [episodeNum]: { panels, gutterSize } }
+  webtoonGutter: 30,      // taille gouttière par défaut (px)
+
   /**
    * Sauvegarde l'état complet dans localStorage
    */
@@ -102,5 +106,7 @@ const State = {
     this.animationConfig = null;
     this.selectedMusic = null;
     this.generatedClips = null;
+    this.webtoonData = null;
+    this.webtoonGutter = 30;
   },
 };

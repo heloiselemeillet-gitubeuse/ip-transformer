@@ -97,6 +97,7 @@ function navigateTo(screenId) {
   if (screenId === 'screen-10') initScreen10();
   if (screenId === 'screen-11') initScreen11();
   if (screenId === 'screen-12') initScreen12();
+  if (screenId === 'screen-13') initScreen13();
 
   // Mettre à jour l'URL (hash)
   window.location.hash = screenId;
