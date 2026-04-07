@@ -203,7 +203,7 @@ function displayGenImages(episodeNum) {
   gridEl.innerHTML = images.map((img, i) => {
     const scene = scenes[i] || {};
     return `
-      <div class="gen-image-card ${img.status === 'approved' ? 'gen-image-card--approved' : ''}">
+      <div class="gen-image-card ${img.status === 'approved' && img.url ? 'gen-image-card--approved' : ''} ${img.status === 'error' || !img.url ? 'gen-image-card--error' : ''}">
         <div class="gen-image-card__header">
           <span class="gen-image-card__scene">Scène ${i + 1}</span>
           <span class="gen-image-card__title">${scene.title || ''}</span>
@@ -215,12 +215,13 @@ function displayGenImages(episodeNum) {
           }
         </div>
         <div class="gen-image-card__actions">
-          ${img.status === 'approved'
-            ? '<span class="gen-image-card__badge gen-image-card__badge--approved">✓ Approuvée</span>'
-            : `
-              <button class="btn btn--small btn--primary" onclick="approveImage(${episodeNum}, ${i})">Approuver</button>
-              <button class="btn btn--small btn--secondary" onclick="regenerateImage(${episodeNum}, ${i})">Régénérer</button>
-            `
+          ${img.status === 'approved' && img.url
+            ? `<span class="gen-image-card__badge gen-image-card__badge--approved">✓ Approuvée</span>
+               <button class="btn btn--small btn--secondary" onclick="regenerateImage(${episodeNum}, ${i})">Régénérer</button>`
+            : img.status === 'error' || !img.url
+              ? `<button class="btn btn--small btn--primary" onclick="regenerateImage(${episodeNum}, ${i})">Régénérer</button>`
+              : `<button class="btn btn--small btn--primary" onclick="approveImage(${episodeNum}, ${i})">Approuver</button>
+                 <button class="btn btn--small btn--secondary" onclick="regenerateImage(${episodeNum}, ${i})">Régénérer</button>`
           }
         </div>
       </div>
@@ -236,8 +237,9 @@ function displayGenImages(episodeNum) {
  * @param {number} imageIndex
  */
 function approveImage(episodeNum, imageIndex) {
-  if (generatedImages[episodeNum] && generatedImages[episodeNum][imageIndex]) {
-    generatedImages[episodeNum][imageIndex].status = 'approved';
+  const img = generatedImages[episodeNum] && generatedImages[episodeNum][imageIndex];
+  if (img && img.url) {
+    img.status = 'approved';
     State.generatedImages = generatedImages;
     State.save();
     displayGenImages(episodeNum);
@@ -353,7 +355,7 @@ function approveAllImages(episodeNum) {
  */
 function checkScreen7Ready() {
   const ep1Images = generatedImages[1] || [];
-  const ep1AllApproved = ep1Images.length === 3 && ep1Images.every(img => img.status === 'approved');
+  const ep1AllApproved = ep1Images.length === 3 && ep1Images.every(img => img.status === 'approved' && img.url);
 
   const btn = document.getElementById('btn-next-screen7');
   if (btn) btn.disabled = !ep1AllApproved;

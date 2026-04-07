@@ -1353,6 +1353,7 @@ body {
 }
 
 .gen-image-card--approved { border-color: var(--success-dark); }
+.gen-image-card--error { border-color: #e74c3c; border-style: dashed; }
 
 .gen-image-card__header {
   padding: 12px 16px;
