@@ -105,8 +105,8 @@ async function generateEpisodeImages(episodeNum) {
 
     // Délai de 5s entre les appels Replicate (sauf le premier)
     if (i > 0) {
-      updateLoadingProgress('screen-7-loading', ((i) / total) * 100, `Pause avant scène ${i + 1}… (anti rate-limit)`);
-      await new Promise(resolve => setTimeout(resolve, 5000));
+      updateLoadingProgress('screen-7-loading', ((i) / total) * 100, `Pause avant scène ${i + 1}… (anti rate-limit 10s)`);
+      await new Promise(resolve => setTimeout(resolve, 10000));
     }
 
     updateLoadingCounter('screen-7-loading', i + 1, total);

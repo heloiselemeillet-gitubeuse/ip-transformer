@@ -28,20 +28,26 @@ async function replicateStartFluxRedux(params) {
   const hasImageRef = !!params.imageRef;
   const model = hasImageRef ? 'flux-redux-dev' : 'flux-schnell';
 
+  // Calculer l'aspect ratio pour flux-schnell (pas de width/height)
+  const w = params.width || 720;
+  const h = params.height || 1280;
+  const aspectRatio = w === h ? '1:1' : (w > h ? '16:9' : '9:16');
+
   const input = hasImageRef
     ? {
         prompt: params.prompt,
         image: `data:image/png;base64,${params.imageRef}`,
-        width: params.width || 720,
-        height: params.height || 1280,
+        width: w,
+        height: h,
         num_outputs: 1,
         guidance_scale: 3.5,
       }
     : {
         prompt: params.prompt,
-        width: params.width || 720,
-        height: params.height || 1280,
+        aspect_ratio: aspectRatio,
         num_outputs: 1,
+        output_format: 'webp',
+        go_fast: true,
       };
 
   const response = await fetch(`${REPLICATE_WORKER}/predict`, {
