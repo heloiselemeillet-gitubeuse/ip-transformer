@@ -10,7 +10,7 @@ const SCREENS = [
   { id: 'screen-1', label: 'Assets', step: 1 },
   { id: 'screen-2', label: 'Analyse', step: 2 },
   { id: 'screen-3', label: 'Histoire', step: 3 },
-  { id: 'screen-3b', label: 'Canon IP', step: 3.5 },
+  { id: 'screen-3b', label: 'ID IP', step: 3.5 },
   { id: 'screen-4', label: 'Épisodes', step: 4 },
   { id: 'screen-5', label: 'Scripts', step: 5 },
   { id: 'screen-5b', label: 'Format', step: 5.5 },
@@ -760,29 +760,29 @@ function displayStory(story) {
 }
 
 // ============================================
-// ÉCRAN 3b — Canon IP / Bible de marque
+// ÉCRAN 3b — ID IP / Bible de marque
 // ============================================
 
 /**
  * Initialise l'écran 3b — génère le canon si pas encore fait
  */
 function initScreen3b() {
-  if (State.canonIP) {
-    displayCanon(State.canonIP);
+  if (State.idIP) {
+    displayCanon(State.idIP);
     return;
   }
   generateCanon();
 }
 
 /**
- * Génère automatiquement le canon IP à partir de l'histoire et de l'analyse
+ * Génère automatiquement le ID IP à partir de l'histoire et de l'analyse
  */
 async function generateCanon() {
   const resultEl = document.getElementById('screen-3b-result');
   resultEl.style.display = 'none';
 
   showLoading('screen-3b-loading', 'claude', {
-    message: 'Génération du canon IP…',
+    message: 'Génération du ID IP…',
   });
 
   try {
@@ -797,7 +797,7 @@ async function generateCanon() {
     const result = await callClaude(prompt, options);
     const canon = parseJSONResponse(result);
 
-    State.canonIP = canon;
+    State.idIP = canon;
     State.save();
 
     displayCanon(canon);
@@ -812,7 +812,7 @@ async function generateCanon() {
 }
 
 /**
- * Construit le prompt de génération du canon IP
+ * Construit le prompt de génération du ID IP
  * @returns {string}
  */
 function buildCanonPrompt() {
@@ -821,7 +821,7 @@ function buildCanonPrompt() {
 
   return `Tu es un directeur artistique. À partir de l'histoire et de l'analyse ci-dessous, génère un CANON IP complet.
 
-Le canon IP est la bible de référence qui garantit la cohérence de TOUTES les productions futures.
+Le ID IP est la bible de référence qui garantit la cohérence de TOUTES les productions futures.
 
 ANALYSE :
 ${analysisJSON}
@@ -865,7 +865,7 @@ function parseJSONResponse(response) {
 }
 
 /**
- * Affiche le canon IP dans le DOM avec les champs éditables
+ * Affiche le ID IP dans le DOM avec les champs éditables
  * @param {Object} canon — données du canon
  */
 function displayCanon(canon) {
@@ -969,10 +969,10 @@ async function loadCharacterRefs() {
 }
 
 /**
- * Sauvegarde le canon IP avec les modifications de l'utilisateur
+ * Sauvegarde le ID IP avec les modifications de l'utilisateur
  */
 function saveCanon() {
-  const canon = State.canonIP || {};
+  const canon = State.idIP || {};
 
   // Récupérer les valeurs éditées
   canon.universe = document.getElementById('canon-universe').value;
@@ -993,7 +993,7 @@ function saveCanon() {
   });
 
   // Sauvegarder
-  State.canonIP = canon;
+  State.idIP = canon;
   State.save();
 
   // Activer le bouton Continuer
@@ -1012,10 +1012,10 @@ function saveCanon() {
 }
 
 /**
- * Régénère le canon IP (alias pour le bouton)
+ * Régénère le ID IP (alias pour le bouton)
  */
 function regenerateCanon() {
-  State.canonIP = null;
+  State.idIP = null;
   generateCanon();
 }
 
@@ -1067,11 +1067,11 @@ async function runEpisodes() {
 
 /**
  * Construit le prompt de découpage épisodique
- * Inclut le canon IP comme verrou de fidélité
+ * Inclut le ID IP comme verrou de fidélité
  * @returns {string}
  */
 function buildEpisodesPrompt() {
-  const canonJSON = JSON.stringify(State.canonIP, null, 2);
+  const canonJSON = JSON.stringify(State.idIP, null, 2);
   const storyJSON = JSON.stringify(State.story, null, 2);
 
   const formatInfo = AppState.mode === 'podcast'
@@ -1094,7 +1094,7 @@ RÈGLES :
 - L'épisode 1 pose le décor et les personnages
 - L'épisode 5 conclut l'histoire
 - Chaque épisode doit donner envie de voir le suivant (cliffhanger ou question ouverte)
-- Rester FIDÈLE au canon IP
+- Rester FIDÈLE au ID IP
 
 FORMAT DE RÉPONSE (JSON strict) :
 {
@@ -1243,7 +1243,7 @@ async function generateScript(episodeNum) {
  * @returns {string}
  */
 function buildScriptPrompt(episodeNum) {
-  const canonJSON = JSON.stringify(State.canonIP, null, 2);
+  const canonJSON = JSON.stringify(State.idIP, null, 2);
   const episodes = State.episodes || [];
   const episode = (Array.isArray(episodes) ? episodes : []).find(e => (e.number || 0) === episodeNum) || episodes[episodeNum - 1];
   const episodeJSON = JSON.stringify(episode, null, 2);
@@ -1270,7 +1270,7 @@ RÈGLES :
 - Exactement 3 sous-scènes
 - Chaque sous-scène doit être autonome visuellement
 - Descriptions visuelles TRÈS détaillées (pour génération d'image/vidéo)
-- Dialogues fidèles au canon IP
+- Dialogues fidèles au ID IP
 - Rester FIDÈLE au ton et aux contraintes du canon
 
 FORMAT DE RÉPONSE (JSON strict) :

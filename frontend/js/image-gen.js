@@ -107,8 +107,8 @@ async function generateEpisodeImages(episodeNum) {
     updateLoadingProgress('screen-7-loading', ((i) / total) * 100, `Scène ${i + 1} — ${scene.title || ''}`);
 
     try {
-      // Construire le prompt avec : description visuelle + style + canon IP + palette
-      const canon = State.canonIP || {};
+      // Construire le prompt avec : description visuelle + style + ID IP + palette
+      const canon = State.idIP || {};
       const prompt = buildImagePrompt(scene, stylePrompt, palettePrompt, canon);
 
       const imageUrl = await replicateGenerateImage(
@@ -151,7 +151,7 @@ async function generateEpisodeImages(episodeNum) {
  * @param {Object} scene — sous-scène du script
  * @param {string} stylePrompt — style visuel
  * @param {string} palettePrompt — palette de couleurs
- * @param {Object} canon — canon IP
+ * @param {Object} canon — ID IP
  * @returns {string}
  */
 function buildImagePrompt(scene, stylePrompt, palettePrompt, canon) {
@@ -250,7 +250,7 @@ async function regenerateImage(episodeNum, imageIndex) {
   const visualStyle = State.visualStyle || {};
   const stylePrompt = visualStyle.stylePrompt || '';
   const palettePrompt = `${visualStyle.temperature || 'neutral'} palette, ${visualStyle.contrast || 'contrasted'} lighting`;
-  const canon = State.canonIP || {};
+  const canon = State.idIP || {};
 
   // Marquer comme en cours
   generatedImages[episodeNum][imageIndex] = {

@@ -280,7 +280,7 @@ async function generateKenBurnsClip(ep, sceneNum) {
  * @returns {string}
  */
 function buildVideoPrompt(scene) {
-  const canonJSON = JSON.stringify(State.canonIP || {}, null, 2);
+  const canonJSON = JSON.stringify(State.idIP || {}, null, 2);
 
   return `${scene.visualDescription || ''}
 

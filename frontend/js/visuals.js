@@ -83,7 +83,7 @@ function renderStyleCards() {
 
 /**
  * Génère une image de prévisualisation pour un style
- * Utilise le personnage principal du canon IP + le style choisi
+ * Utilise le personnage principal du ID IP + le style choisi
  * @param {string} styleId — id du style
  */
 async function generateStylePreview(styleId) {
@@ -101,8 +101,8 @@ async function generateStylePreview(styleId) {
   `;
 
   try {
-    // Récupérer le personnage principal du canon IP
-    const canon = State.canonIP || {};
+    // Récupérer le personnage principal du ID IP
+    const canon = State.idIP || {};
     const mainChar = (canon.characters && canon.characters[0]) || {};
     const charDesc = mainChar.visualPrompt || mainChar.description || 'a character portrait';
 

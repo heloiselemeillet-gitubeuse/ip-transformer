@@ -125,8 +125,8 @@ function initWebtoonEpisodeData(episodeNum, script, genImages) {
 
       // Couleur par intervenant (mode podcast)
       let color = '#ffffff';
-      if (State.canonIP && State.canonIP.characters) {
-        const char = State.canonIP.characters.find(c =>
+      if (State.idIP && State.idIP.characters) {
+        const char = State.idIP.characters.find(c =>
           c.name.toLowerCase() === d.speaker.toLowerCase()
         );
         if (char) color = char.color || '#ffffff';

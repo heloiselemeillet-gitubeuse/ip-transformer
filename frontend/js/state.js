@@ -26,7 +26,7 @@ const State = {
   story: null,            // Histoire structurée
 
   // Écran 3b — Canon IP
-  canonIP: null,          // Bible de marque / verrou de fidélité
+  idIP: null,          // Bible de marque / verrou de fidélité
 
   // Écran 4 — Épisodes
   episodes: null,         // Découpage en 5 épisodes
@@ -98,7 +98,7 @@ const State = {
     this.paintingCount = 0;
     this.analysis = null;
     this.story = null;
-    this.canonIP = null;
+    this.idIP = null;
     this.episodes = null;
     this.scripts = null;
     this.visualStyle = null;
