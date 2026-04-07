@@ -47,11 +47,12 @@ MODE PEINTURE :
 - L'IA analyse l'univers visuel et crée une histoire fidèle au style de l'artiste
 - Respecter la palette, l'ambiance, les personnages des tableaux
 
-## CANON IP (concept central)
+## ID IP (concept central — anciennement "Canon IP")
 
 Objet structuré généré à l'écran 3b, envoyé dans CHAQUE prompt IA suivant.
 Contient : personnages, univers, ton, contraintes, références visuelles.
 C'est le verrou de fidélité — l'IA doit le respecter à chaque étape.
+Variable JS : `State.idIP` (renommé depuis `State.canonIP`).
 
 ## ARCHITECTURE VIDÉO (micro-drama)
 
@@ -79,7 +80,7 @@ Pour un épisode webtoon :
 Écran 1 : Asset Loader — lien YouTube OU upload œuvres
 Écran 2 : Analyse IA de l'asset source
 Écran 3 : Histoire structurée (fidèle à l'IP)
-Écran 3b : Canon IP / Bible de marque (verrou de fidélité)
+Écran 3b : ID IP / Bible de marque (verrou de fidélité)
 Écran 4 : Découpage en 5 épisodes
 Écran 5 : Scripts détaillés (3 sous-scènes par épisode)
 Écran 5b : Choix du format de sortie (webtoon / micro-drama / les deux)
@@ -126,8 +127,17 @@ IMPORTANT : Flux Redux, PAS Flux standard (text-only).
 
 Jamais de clé API dans le frontend. Tout dans wrangler secret.
 
+### Workers déployés (production)
+- api-proxy → https://api-proxy.heloise-lemeillet.workers.dev (secret: ANTHROPIC_API_KEY)
+- replicate-proxy → https://replicate-proxy.heloise-lemeillet.workers.dev (secret: REPLICATE_API_TOKEN)
+- youtube-proxy → https://youtube-proxy.heloise-lemeillet.workers.dev (pas de secret)
+
+### URLs frontend (frontend/js/api.js)
+- Dev (localhost) : localhost:8787 / 8788 / 8789
+- Prod : *.heloise-lemeillet.workers.dev
+
 CORS obligatoire sur TOUS les Workers :
-- Vérifier Origin (domaine Pages + localhost)
+- Vérifier Origin (domaine Pages + localhost + *.pages.dev)
 - 403 si non autorisé
 - Headers CORS standards
 - Gérer OPTIONS preflight
@@ -140,13 +150,54 @@ CORS obligatoire sur TOUS les Workers :
 - ffmpeg.wasm (30s-2min) : progress bar % réel
 Ne JAMAIS laisser l'écran figé.
 
-## DESIGN UI
+## DESIGN UI — "Neo Pop Tech Human"
 
-- Fond principal : #0a0a0a / Fond cartes : #1a1a2e (glassmorphism 0.8)
-- Accent primaire : #7c3aed (violet) / Accent secondaire : #06b6d4 (cyan)
-- Texte principal : #f1f5f9 / Texte secondaire : #94a3b8
-- Bordures : #334155 / Succès : #10b981 / Erreur : #ef4444
+- Fond principal : #ffffff (blanc) — PAS de dark mode
+- Fond cartes : #f5f5f5 — PAS de glassmorphism, ombres légères
+- Accent primaire : #E91E90 (magenta)
+- Accent secondaire : #00BFFF (cyan)
+- Accent tertiaire : #FFD600 (jaune) — utilisé pour les tags
+- Accent violet : #7c3aed (phase Production)
+- Texte principal : #1a1a1a / Texte secondaire : #666666
+- Bordures : #e0e0e0 / Succès : #39FF14 / Erreur : #ef4444
 - Typo : Inter (Google Fonts) — body 16px, headings bold
 - Border-radius : 12px cartes, 8px boutons
-- Glassmorphism : backdrop-filter: blur(10px)
 - Transitions : 200ms ease hover, 300ms changements d'écran
+- Texture subtile : dots en radial-gradient
+- Stepper desktop : 3 phases (Extraction magenta | Visuels cyan | Production violet)
+- Stepper mobile (<768px) : compact "Étape X/N — Label" + barre de progression
+
+## ÉTAT D'AVANCEMENT (mis à jour 2026-04-07)
+
+### Frontend — COMPLET
+Tous les 14 écrans (0 à 13) sont implémentés :
+- Écrans 0-5b : parcours commun (accueil, assets, analyse, histoire, ID IP, épisodes, scripts, format)
+- Écrans 6-8 : module visuels (génération images, révision, validation)
+- Écrans 9-12 : module micro-drama (animation config, clips vidéo, timeline, export)
+- Écran 13 : module webtoon (éditeur bulles + export JPEG canvas)
+
+### Workers Cloudflare — DÉPLOYÉS
+Les 3 workers sont live en production avec leurs secrets configurés.
+
+### Fichiers JS principaux
+- app.js : routeur SPA, logique écrans 0-5b,
+- api.js : communication Workers (callClaude, startReplicate, pollReplicate, fetchYoutubeTranscript)
+- state.js : état localStorage (State.idIP, State.episodes, State.scripts, etc.)
+- stepper.js : stepper phases desktop + mobile compact
+- visuals.js : écran 6 (génération images style/palette)
+- image-gen.js : écrans 7-8 (génération Flux Redux, révision, validation)
+- animation.js : écran 9 (config Wan vs Ken Burns)
+- video-gen.js : écran 10 (génération clips)
+- ffmpeg-engine.js : moteur ffmpeg.wasm (Ken Burns, assemblage, mixage musique)
+- timeline.js : écran 11 (assemblage épisode)
+- export.js : écran 12 (export MP4)
+- webtoon-editor.js : écran 13 (éditeur bulles drag & drop)
+- webtoon-export.js : export canvas → JPEG
+- music.js : bibliothèque 10 tracks, sélecteur, preview audio
+- loading.js : composants feedback d'attente
+- db.js : IndexedDB pour assets lourds
+
+### À TESTER
+- Test bout en bout Demo A (Podcast → Webtoon) sur http://localhost:3000/
+- Test bout en bout Demo B (Peintures → Micro-drama)
+- Vérifier les appels API réels (Claude, Replicate, YouTube transcript)
