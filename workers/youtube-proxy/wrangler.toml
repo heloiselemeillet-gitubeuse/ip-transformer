@@ -1,1 +1,6 @@
 # Configuration Wrangler — YouTube Proxy
+name = "youtube-proxy"
+main = "index.js"
+compatibility_date = "2024-01-01"
+
+# Pas de secret nécessaire — extraction via YouTube Data (sous-titres publics)
