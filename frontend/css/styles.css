@@ -2175,3 +2175,58 @@ body {
   .mode-card__title { font-size: 17px; }
   .episode-tab { padding: 8px 12px; font-size: 12px; }
 }
+
+/* ============================================
+   Screen-0 : Compact mode + format cards
+   ============================================ */
+
+.mode-card--compact {
+  padding: 16px 20px;
+  flex-direction: row;
+  gap: 12px;
+  text-align: left;
+}
+.mode-card--compact .mode-card__icon { font-size: 28px; }
+.mode-card--compact .mode-card__title { font-size: 16px; }
+
+.format-card--compact {
+  padding: 14px 18px;
+  flex-direction: row;
+  gap: 10px;
+  text-align: left;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  cursor: pointer;
+  transition: all var(--transition-hover);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: inherit;
+  box-shadow: var(--shadow-card);
+}
+.format-card--compact:hover {
+  border-color: var(--accent-primary);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-hover);
+}
+.format-card--compact .format-card__icon { font-size: 24px; }
+.format-card--compact .format-card__title { font-size: 15px; }
+
+.format-card--selected {
+  border-color: var(--accent-primary);
+  background: rgba(233, 30, 144, 0.05);
+}
+
+.format-choices--row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.screen-0__config {
+  max-width: 700px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}

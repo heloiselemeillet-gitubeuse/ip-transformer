@@ -17,21 +17,21 @@ let stepperAppState = null;
 const STEPPER_PHASES = [
   {
     key: 'extraction',
-    label: 'Extraction',
+    label: 'EXTRACTION',
     cssClass: 'stepper__phase--extraction',
-    screenIds: ['screen-0', 'screen-1', 'screen-2', 'screen-3', 'screen-3b', 'screen-4', 'screen-5', 'screen-5b'],
-  },
-  {
-    key: 'visuels',
-    label: 'Visuels',
-    cssClass: 'stepper__phase--visuels',
-    screenIds: ['screen-6', 'screen-7', 'screen-8'],
+    screenIds: ['screen-0', 'screen-1', 'screen-2', 'screen-3b'],
   },
   {
     key: 'production',
-    label: 'Production',
+    label: 'PRODUCTION',
+    cssClass: 'stepper__phase--visuels',
+    screenIds: ['screen-4', 'screen-5'],
+  },
+  {
+    key: 'visuels',
+    label: 'VISUELS',
     cssClass: 'stepper__phase--production',
-    screenIds: ['screen-9', 'screen-10', 'screen-11', 'screen-12', 'screen-13'],
+    screenIds: ['screen-7', 'screen-8', 'screen-9', 'screen-10', 'screen-11', 'screen-12', 'screen-13'],
   },
 ];
 

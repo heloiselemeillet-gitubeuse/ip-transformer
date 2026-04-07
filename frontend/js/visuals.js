@@ -63,6 +63,7 @@ function renderStyleCards() {
   const mode = AppState.mode || 'podcast';
   const styles = VISUAL_STYLES[mode] || VISUAL_STYLES.podcast;
   const container = document.getElementById('style-cards');
+  if (!container) return;
 
   container.innerHTML = styles.map(style => `
     <div class="style-card ${selectedStyle === style.id ? 'style-card--selected' : ''}"
@@ -166,6 +167,7 @@ function selectStyle(styleId) {
 function renderPaletteOptions() {
   // Température
   const tempContainer = document.getElementById('palette-temperature');
+  if (!tempContainer) return;
   tempContainer.innerHTML = PALETTE_OPTIONS.temperature.map(opt => `
     <button class="palette-btn ${selectedTemperature === opt.id ? 'palette-btn--selected' : ''}"
             onclick="selectTemperature('${opt.id}')">
@@ -175,6 +177,7 @@ function renderPaletteOptions() {
 
   // Contraste
   const contrastContainer = document.getElementById('palette-contrast');
+  if (!contrastContainer) return;
   contrastContainer.innerHTML = PALETTE_OPTIONS.contrast.map(opt => `
     <button class="palette-btn ${selectedContrast === opt.id ? 'palette-btn--selected' : ''}"
             onclick="selectContrast('${opt.id}')">
@@ -226,6 +229,9 @@ function checkScreen6Ready() {
     State.save();
   }
 
+  // Support both screen-6 (legacy) and screen-3b (merged)
   const btn = document.getElementById('btn-next-screen6');
   if (btn) btn.disabled = !ready;
+  const btn3b = document.getElementById('btn-next-screen3b');
+  // Don't disable btn3b here — saveCanon handles that
 }

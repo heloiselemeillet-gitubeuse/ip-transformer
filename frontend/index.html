@@ -19,44 +19,52 @@
   <!-- Conteneur principal des écrans -->
   <main id="app">
 
-    <!-- ÉCRAN 0 : Accueil — choix du mode -->
+    <!-- ÉCRAN 0 : Accueil — choix du mode + format -->
     <section id="screen-0" class="screen screen--active">
       <div class="screen__content screen-0__content">
 
-        <!-- En-tête -->
         <div class="screen-0__header">
           <h1 class="screen-0__title">IP Transformer</h1>
-          <p class="screen-0__subtitle">
-            Réexploitez une IP existante en plusieurs formats<br>
-            sans repartir de zéro.
-          </p>
+          <p class="screen-0__subtitle">Réexploitez une IP existante en plusieurs formats sans repartir de zéro.</p>
         </div>
 
-        <!-- Choix du mode -->
-        <div class="screen-0__modes">
+        <div class="screen-0__config">
+          <div class="card">
+            <h3 class="card__title">Format d'entrée</h3>
+            <div class="format-choices format-choices--row">
+              <button class="mode-card mode-card--compact" id="mode-podcast" onclick="selectInput('podcast')">
+                <div class="mode-card__icon">🎙️</div>
+                <h3 class="mode-card__title">Podcast YouTube</h3>
+              </button>
+              <button class="mode-card mode-card--compact" id="mode-peinture" onclick="selectInput('peinture')">
+                <div class="mode-card__icon">🎨</div>
+                <h3 class="mode-card__title">Peintures</h3>
+              </button>
+            </div>
+          </div>
+          <div class="card">
+            <h3 class="card__title">Format de sortie</h3>
+            <div class="format-choices format-choices--row">
+              <button class="format-card format-card--compact" id="output-webtoon" onclick="selectOutput('webtoon')">
+                <div class="format-card__icon">📖</div>
+                <h3 class="format-card__title">Webtoon</h3>
+              </button>
+              <button class="format-card format-card--compact" id="output-micro-drama" onclick="selectOutput('micro-drama')">
+                <div class="format-card__icon">🎬</div>
+                <h3 class="format-card__title">Micro-drama</h3>
+              </button>
+              <button class="format-card format-card--compact" id="output-both" onclick="selectOutput('both')">
+                <div class="format-card__icon">✨</div>
+                <h3 class="format-card__title">Les deux</h3>
+              </button>
+            </div>
+          </div>
+        </div>
 
-          <!-- Mode Podcast -->
-          <button class="mode-card" id="mode-podcast" onclick="selectMode('podcast')">
-            <div class="mode-card__icon">🎙️</div>
-            <h2 class="mode-card__title">Podcast → Webtoon</h2>
-            <p class="mode-card__desc">
-              Transformez un podcast YouTube en webtoon narratif.
-              L'IA extrait les faits et citations réels.
-            </p>
-            <span class="mode-card__tag">DÉMO A</span>
+        <div class="screen__nav" style="justify-content: center;">
+          <button class="btn btn--primary btn--large" id="btn-start" onclick="startPipeline()" disabled>
+            Commencer →
           </button>
-
-          <!-- Mode Peinture -->
-          <button class="mode-card" id="mode-peinture" onclick="selectMode('peinture')">
-            <div class="mode-card__icon">🎨</div>
-            <h2 class="mode-card__title">Peintures → Micro-drama</h2>
-            <p class="mode-card__desc">
-              Transformez des œuvres picturales en micro-drama vidéo
-              fidèle au style de l'artiste.
-            </p>
-            <span class="mode-card__tag">DÉMO B</span>
-          </button>
-
         </div>
 
       </div>
@@ -232,61 +240,6 @@
       </div>
     </section>
 
-    <!-- ÉCRAN 3 : Histoire structurée -->
-    <section id="screen-3" class="screen">
-      <div class="screen__content">
-
-        <h2 class="screen__title">Histoire structurée</h2>
-        <p class="screen__desc">L'IA construit une histoire narrative fidèle à votre IP source.</p>
-
-        <!-- Zone de chargement -->
-        <div id="screen-3-loading"></div>
-
-        <!-- Résultat de l'histoire -->
-        <div id="screen-3-result" style="display: none;">
-
-          <!-- Synopsis -->
-          <div class="card">
-            <h3 class="card__title">Synopsis</h3>
-            <div id="story-synopsis" class="story-text"></div>
-          </div>
-
-          <!-- Personnages -->
-          <div class="card">
-            <h3 class="card__title">Personnages</h3>
-            <div id="story-characters" class="characters-grid"></div>
-          </div>
-
-          <!-- Arcs narratifs -->
-          <div class="card">
-            <h3 class="card__title">Arcs narratifs</h3>
-            <div id="story-arcs" class="arcs-list"></div>
-          </div>
-
-          <!-- Ton & Ambiance -->
-          <div class="card">
-            <h3 class="card__title">Ton & Ambiance</h3>
-            <div id="story-tone" class="story-text"></div>
-          </div>
-
-          <!-- Actions -->
-          <div class="action-row">
-            <button class="btn btn--secondary" onclick="runStory()">Régénérer l'histoire</button>
-          </div>
-
-        </div>
-
-        <!-- Navigation -->
-        <div class="screen__nav">
-          <button class="btn btn--secondary" onclick="prevScreen()">← Retour</button>
-          <button class="btn btn--primary" id="btn-next-screen3" onclick="nextScreen()" disabled>
-            Continuer →
-          </button>
-        </div>
-
-      </div>
-    </section>
-
     <!-- ÉCRAN 3b : ID IP / Bible de marque -->
     <section id="screen-3b" class="screen">
       <div class="screen__content">
@@ -302,6 +255,18 @@
 
         <!-- Résultat du canon -->
         <div id="screen-3b-result" style="display: none;">
+
+          <!-- Synopsis -->
+          <div class="card">
+            <h3 class="card__title">Synopsis</h3>
+            <div id="canon-synopsis" class="story-text"></div>
+          </div>
+
+          <!-- Arcs narratifs -->
+          <div class="card">
+            <h3 class="card__title">Arcs narratifs</h3>
+            <div id="canon-arcs" class="arcs-list"></div>
+          </div>
 
           <!-- Personnages avec références visuelles -->
           <div class="card">
@@ -338,10 +303,31 @@
             </div>
           </div>
 
+          <!-- Style visuel (intégré dans ID IP) -->
+          <div class="card">
+            <h3 class="card__title">Style visuel</h3>
+            <p class="card__desc">Choisissez le style et la palette pour la génération d'images.</p>
+            <div id="style-cards" class="style-cards-grid"></div>
+          </div>
+
+          <div class="card">
+            <h3 class="card__title">Palette de couleurs</h3>
+            <div class="palette-row">
+              <div>
+                <h4 class="palette-row__label">Température</h4>
+                <div id="palette-temperature" class="palette-btns"></div>
+              </div>
+              <div>
+                <h4 class="palette-row__label">Contraste</h4>
+                <div id="palette-contrast" class="palette-btns"></div>
+              </div>
+            </div>
+          </div>
+
           <!-- Actions -->
           <div class="action-row">
             <button class="btn btn--secondary" onclick="regenerateCanon()">Régénérer le canon</button>
-            <button class="btn btn--primary" onclick="saveCanon()">Valider le canon</button>
+            <button class="btn btn--primary" onclick="saveCanon()">Valider l'ID IP</button>
           </div>
 
         </div>
@@ -419,112 +405,6 @@
         <div class="screen__nav">
           <button class="btn btn--secondary" onclick="prevScreen()">← Retour</button>
           <button class="btn btn--primary" id="btn-next-screen5" onclick="nextScreen()" disabled>
-            Continuer →
-          </button>
-        </div>
-
-      </div>
-    </section>
-
-    <!-- ÉCRAN 5b : Choix du format de sortie -->
-    <section id="screen-5b" class="screen">
-      <div class="screen__content screen-5b__content">
-
-        <div class="screen-5b__header">
-          <h2 class="screen__title">Choisissez le format de sortie</h2>
-          <p class="screen__desc">Sélectionnez le format dans lequel vous souhaitez produire vos épisodes.</p>
-        </div>
-
-        <!-- Choix du format -->
-        <div class="format-choices">
-
-          <!-- Webtoon -->
-          <button class="format-card" id="format-webtoon" onclick="selectFormat('webtoon')">
-            <div class="format-card__icon">📖</div>
-            <h3 class="format-card__title">Webtoon</h3>
-            <p class="format-card__desc">
-              3 images empilées verticalement avec bulles de dialogue.
-              Export en JPEG long.
-            </p>
-            <ul class="format-card__specs">
-              <li>720px de large</li>
-              <li>Gouttières 20-60px</li>
-              <li>Bulles auto-placées</li>
-            </ul>
-          </button>
-
-          <!-- Micro-drama -->
-          <button class="format-card" id="format-micro-drama" onclick="selectFormat('micro-drama')">
-            <div class="format-card__icon">🎬</div>
-            <h3 class="format-card__title">Micro-drama</h3>
-            <p class="format-card__desc">
-              3 clips vidéo de ~15s assemblés avec musique.
-              Format vertical 9:16.
-            </p>
-            <ul class="format-card__specs">
-              <li>~45 secondes/épisode</li>
-              <li>Musique libre de droits</li>
-              <li>Desktop uniquement</li>
-            </ul>
-          </button>
-
-          <!-- Les deux -->
-          <button class="format-card" id="format-both" onclick="selectFormat('both')">
-            <div class="format-card__icon">✨</div>
-            <h3 class="format-card__title">Les deux</h3>
-            <p class="format-card__desc">
-              Produisez à la fois le webtoon et le micro-drama
-              pour chaque épisode.
-            </p>
-            <ul class="format-card__specs">
-              <li>Double production</li>
-              <li>Cohérence cross-format</li>
-              <li>Maximum d'impact</li>
-            </ul>
-          </button>
-
-        </div>
-
-        <!-- Navigation -->
-        <div class="screen__nav">
-          <button class="btn btn--secondary" onclick="prevScreen()">← Retour</button>
-        </div>
-
-      </div>
-    </section>
-
-    <!-- ÉCRAN 6 : Style visuel -->
-    <section id="screen-6" class="screen">
-      <div class="screen__content">
-
-        <h2 class="screen__title">Style visuel</h2>
-        <p class="screen__desc">Choisissez un style et une palette. Générez un aperçu pour comparer.</p>
-
-        <!-- Cartes de style -->
-        <div class="card">
-          <h3 class="card__title">Style</h3>
-          <div id="style-cards" class="style-cards-grid"></div>
-        </div>
-
-        <!-- Palette -->
-        <div class="card">
-          <h3 class="card__title">Palette de couleurs</h3>
-          <div class="palette-row">
-            <div>
-              <h4 class="palette-row__label">Température</h4>
-              <div id="palette-temperature" class="palette-btns"></div>
-            </div>
-            <div>
-              <h4 class="palette-row__label">Contraste</h4>
-              <div id="palette-contrast" class="palette-btns"></div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Navigation -->
-        <div class="screen__nav">
-          <button class="btn btn--secondary" onclick="prevScreen()">← Retour</button>
-          <button class="btn btn--primary" id="btn-next-screen6" onclick="nextScreen()" disabled>
             Continuer →
           </button>
         </div>

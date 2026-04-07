@@ -22,10 +22,7 @@ const State = {
   // Écran 2 — Analyse
   analysis: null,         // Résultat de l'analyse IA
 
-  // Écran 3 — Histoire
-  story: null,            // Histoire structurée
-
-  // Écran 3b — Canon IP
+  // Écran 3b — Canon IP (includes synopsis, arcs, characters, style)
   idIP: null,          // Bible de marque / verrou de fidélité
 
   // Écran 4 — Épisodes
@@ -34,7 +31,7 @@ const State = {
   // Écran 5 — Scripts
   scripts: null,          // Scripts détaillés par épisode
 
-  // Écran 6 — Style visuel
+  // Style visuel (set from screen-3b)
   visualStyle: null,      // { styleId, styleLabel, stylePrompt, temperature, contrast }
 
   // Écran 7 — Images générées
@@ -97,7 +94,6 @@ const State = {
     this.transcriptSource = null;
     this.paintingCount = 0;
     this.analysis = null;
-    this.story = null;
     this.idIP = null;
     this.episodes = null;
     this.scripts = null;

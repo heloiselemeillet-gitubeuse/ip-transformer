@@ -7,24 +7,18 @@
  */
 const SCREENS = [
   { id: 'screen-0', label: 'Accueil', step: 0 },
-  { id: 'screen-1', label: 'Assets', step: 1 },
-  { id: 'screen-2', label: 'Analyse', step: 2 },
-  { id: 'screen-3', label: 'Histoire', step: 3 },
-  { id: 'screen-3b', label: 'ID IP', step: 3.5 },
+  { id: 'screen-1', label: 'Asset IP', step: 1 },
+  { id: 'screen-2', label: 'Extraction', step: 2 },
+  { id: 'screen-3b', label: 'ID IP', step: 3 },
   { id: 'screen-4', label: 'Épisodes', step: 4 },
   { id: 'screen-5', label: 'Scripts', step: 5 },
-  { id: 'screen-5b', label: 'Format', step: 5.5 },
-  // Branche Webtoon
-  { id: 'screen-6', label: 'Génération', step: 6, branch: 'both' },
-  { id: 'screen-7', label: 'Révision', step: 7, branch: 'both' },
-  { id: 'screen-8', label: 'Validation', step: 8, branch: 'both' },
-  // Branche Micro-drama uniquement
-  { id: 'screen-9', label: 'Animation', step: 9, branch: 'micro-drama' },
-  { id: 'screen-10', label: 'Clips', step: 10, branch: 'micro-drama' },
-  { id: 'screen-11', label: 'Assemblage', step: 11, branch: 'micro-drama' },
-  { id: 'screen-12', label: 'Export', step: 12, branch: 'micro-drama' },
-  // Branche Webtoon uniquement
-  { id: 'screen-13', label: 'Export Webtoon', step: 13, branch: 'webtoon' },
+  { id: 'screen-7', label: 'Images', step: 6, branch: 'both' },
+  { id: 'screen-8', label: 'Storyboard', step: 7, branch: 'both' },
+  { id: 'screen-9', label: 'Animation', step: 8, branch: 'micro-drama' },
+  { id: 'screen-10', label: 'Clips', step: 9, branch: 'micro-drama' },
+  { id: 'screen-11', label: 'Assemblage', step: 10, branch: 'micro-drama' },
+  { id: 'screen-12', label: 'Export vidéo', step: 11, branch: 'micro-drama' },
+  { id: 'screen-13', label: 'Export Webtoon', step: 12, branch: 'webtoon' },
 ];
 
 /**
@@ -95,12 +89,9 @@ function navigateTo(screenId) {
   // Initialiser l'écran si nécessaire
   if (screenId === 'screen-1') initScreen1();
   if (screenId === 'screen-2') initScreen2();
-  if (screenId === 'screen-3') initScreen3();
   if (screenId === 'screen-3b') initScreen3b();
   if (screenId === 'screen-4') initScreen4();
   if (screenId === 'screen-5') initScreen5();
-  if (screenId === 'screen-5b') initScreen5b();
-  if (screenId === 'screen-6') initScreen6();
   if (screenId === 'screen-7') initScreen7();
   if (screenId === 'screen-8') initScreen8();
   if (screenId === 'screen-9') initScreen9();
@@ -150,26 +141,52 @@ function prevScreen() {
 }
 
 /**
- * Sélection du mode depuis l'écran d'accueil
+ * Sélection du format d'entrée depuis l'écran d'accueil
+ * @param {string} mode — 'podcast' ou 'peinture'
+ */
+function selectInput(mode) {
+  AppState.mode = mode;
+  document.querySelectorAll('#mode-podcast, #mode-peinture').forEach(el => el.classList.remove('mode-card--selected'));
+  const el = document.getElementById(`mode-${mode}`);
+  if (el) el.classList.add('mode-card--selected');
+  checkStartReady();
+}
+
+/**
+ * Sélection du format de sortie depuis l'écran d'accueil
+ * @param {string} format — 'webtoon', 'micro-drama' ou 'both'
+ */
+function selectOutput(format) {
+  AppState.outputFormat = format;
+  document.querySelectorAll('[id^="output-"]').forEach(el => el.classList.remove('format-card--selected'));
+  const el = document.getElementById(`output-${format}`);
+  if (el) el.classList.add('format-card--selected');
+  if (typeof renderStepper === 'function') renderStepper();
+  checkStartReady();
+}
+
+/**
+ * Vérifie si les deux choix sont faits et active le bouton Commencer
+ */
+function checkStartReady() {
+  const btn = document.getElementById('btn-start');
+  if (btn) btn.disabled = !(AppState.mode && AppState.outputFormat);
+}
+
+/**
+ * Lance le pipeline après sélection des formats
+ */
+function startPipeline() {
+  AppState.save();
+  navigateTo('screen-1');
+}
+
+/**
+ * Backward compat: old selectMode calls redirect to selectInput
  * @param {string} mode — 'podcast' ou 'peinture'
  */
 function selectMode(mode) {
-  AppState.mode = mode;
-  AppState.save();
-
-  // Feedback visuel sur la carte sélectionnée
-  document.querySelectorAll('.mode-card').forEach(card => {
-    card.classList.remove('mode-card--selected');
-  });
-  const selected = document.getElementById(`mode-${mode}`);
-  if (selected) {
-    selected.classList.add('mode-card--selected');
-  }
-
-  // Passer à l'écran suivant après un court délai (feedback visuel)
-  setTimeout(() => {
-    navigateTo('screen-1');
-  }, 300);
+  selectInput(mode);
 }
 
 // ============================================
@@ -626,177 +643,6 @@ function displayAnalysis(analysis) {
 }
 
 // ============================================
-// ÉCRAN 3 — Histoire structurée
-// ============================================
-
-/**
- * Initialise l'écran 3 et lance la génération si pas encore faite
- */
-function initScreen3() {
-  if (State.story) {
-    displayStory(State.story);
-    return;
-  }
-  runStory();
-}
-
-/**
- * Lance la génération de l'histoire structurée via Claude
- */
-async function runStory() {
-  const resultEl = document.getElementById('screen-3-result');
-  resultEl.style.display = 'none';
-
-  showLoading('screen-3-loading', 'claude', {
-    message: 'Création de l\'histoire en cours…',
-  });
-
-  try {
-    const prompt = buildStoryPrompt();
-    const options = {};
-
-    // En mode peinture, envoyer aussi les images
-    if (AppState.mode === 'peinture') {
-      const paintings = await dbGetAll(STORES.PAINTINGS);
-      options.images = await convertPaintingsToBase64(paintings);
-    }
-
-    const result = await callClaude(prompt, options);
-    const story = parseStoryResponse(result);
-
-    // Sauvegarder
-    State.story = story;
-    State.save();
-
-    displayStory(story);
-
-  } catch (err) {
-    hideLoading('screen-3-loading');
-    const resultEl = document.getElementById('screen-3-result');
-    resultEl.style.display = 'block';
-    resultEl.innerHTML = `<div class="card"><p class="status--error">Erreur : ${err.message}</p>
-      <button class="btn btn--primary" onclick="runStory()" style="margin-top:16px">Réessayer</button></div>`;
-  }
-}
-
-/**
- * Construit le prompt de génération d'histoire
- * @returns {string}
- */
-function buildStoryPrompt() {
-  const analysisJSON = JSON.stringify(State.analysis, null, 2);
-
-  if (AppState.mode === 'podcast') {
-    return `Tu es un scénariste narratif. À partir de l'analyse suivante d'un podcast, crée une histoire structurée adaptée au format webtoon.
-
-RÈGLES CRITIQUES :
-- L'histoire doit être FIDÈLE aux faits et citations du podcast.
-- NE PAS inventer de nouveaux faits. Tu peux adapter la FORME narrative, pas le FOND.
-- Les personnages doivent correspondre aux intervenants réels.
-- Le ton doit refléter l'ambiance du podcast original.
-
-ANALYSE SOURCE :
-${analysisJSON}
-
-FORMAT DE RÉPONSE (JSON strict) :
-{
-  "synopsis": "Synopsis de l'histoire (3-5 phrases)",
-  "characters": [
-    { "name": "Nom", "description": "Description physique et personnalité", "role": "Rôle dans l'histoire", "color": "#hex" }
-  ],
-  "arcs": [
-    { "title": "Titre de l'arc", "description": "Description de l'arc narratif" }
-  ],
-  "tone": "Description du ton et de l'ambiance narrative"
-}`;
-  } else {
-    return `Tu es un scénariste narratif spécialisé en adaptation visuelle. À partir de l'analyse suivante d'œuvres picturales, crée une histoire structurée pour un micro-drama vidéo.
-
-RÈGLES CRITIQUES :
-- L'histoire doit être FIDÈLE à l'univers visuel des œuvres.
-- Respecter la palette, l'ambiance et le style de l'artiste.
-- Les personnages et décors doivent s'inspirer directement des tableaux.
-- Le ton émotionnel doit correspondre à l'ambiance des œuvres.
-
-ANALYSE SOURCE :
-${analysisJSON}
-
-FORMAT DE RÉPONSE (JSON strict) :
-{
-  "synopsis": "Synopsis de l'histoire (3-5 phrases)",
-  "characters": [
-    { "name": "Nom", "description": "Description physique détaillée fidèle au style des peintures", "role": "Rôle dans l'histoire", "color": "#hex" }
-  ],
-  "arcs": [
-    { "title": "Titre de l'arc", "description": "Description de l'arc narratif" }
-  ],
-  "tone": "Description du ton et de l'ambiance narrative"
-}`;
-  }
-}
-
-/**
- * Parse la réponse de Claude pour l'histoire
- * @param {Object} response — réponse brute
- * @returns {Object}
- */
-function parseStoryResponse(response) {
-  const text = response.content || response.text || JSON.stringify(response);
-  const jsonMatch = text.match(/\{[\s\S]*\}/);
-  if (!jsonMatch) {
-    throw new Error('Réponse IA invalide — pas de JSON trouvé');
-  }
-  return JSON.parse(jsonMatch[0]);
-}
-
-/**
- * Affiche l'histoire structurée dans le DOM
- * @param {Object} story — données de l'histoire
- */
-function displayStory(story) {
-  hideLoading('screen-3-loading');
-
-  const resultEl = document.getElementById('screen-3-result');
-  resultEl.style.display = 'block';
-
-  // Synopsis
-  document.getElementById('story-synopsis').innerHTML = `<p>${story.synopsis || ''}</p>`;
-
-  // Personnages
-  const charsEl = document.getElementById('story-characters');
-  charsEl.innerHTML = (story.characters || []).map(c => `
-    <div class="character-card">
-      <div class="character-card__avatar" style="background:${c.color || 'var(--accent-primary)'}">
-        ${(c.name || '?')[0].toUpperCase()}
-      </div>
-      <div class="character-card__info">
-        <h4 class="character-card__name">${c.name}</h4>
-        <span class="character-card__role">${c.role || ''}</span>
-        <p class="character-card__desc">${c.description || ''}</p>
-      </div>
-    </div>
-  `).join('');
-
-  // Arcs narratifs
-  const arcsEl = document.getElementById('story-arcs');
-  arcsEl.innerHTML = (story.arcs || []).map((a, i) => `
-    <div class="arc-item">
-      <span class="arc-item__number">${i + 1}</span>
-      <div>
-        <h4 class="arc-item__title">${a.title}</h4>
-        <p class="arc-item__desc">${a.description}</p>
-      </div>
-    </div>
-  `).join('');
-
-  // Ton
-  document.getElementById('story-tone').innerHTML = `<p>${story.tone || ''}</p>`;
-
-  // Activer le bouton Continuer
-  document.getElementById('btn-next-screen3').disabled = false;
-}
-
-// ============================================
 // ÉCRAN 3b — ID IP / Bible de marque
 // ============================================
 
@@ -806,9 +652,11 @@ function displayStory(story) {
 function initScreen3b() {
   if (State.idIP) {
     displayCanon(State.idIP);
-    return;
+  } else {
+    generateCanon();
   }
-  generateCanon();
+  // Init visual style controls (moved from screen-6)
+  if (typeof initScreen6 === 'function') initScreen6();
 }
 
 /**
@@ -853,29 +701,28 @@ async function generateCanon() {
  * @returns {string}
  */
 function buildCanonPrompt() {
-  const storyJSON = JSON.stringify(State.story, null, 2);
   const analysisJSON = JSON.stringify(State.analysis, null, 2);
 
-  return `Tu es un directeur artistique. À partir de l'histoire et de l'analyse ci-dessous, génère un CANON IP complet.
+  return `Tu es un directeur artistique et scénariste. À partir de l'analyse suivante, génère un ID IP complet — la bible de référence qui garantit la cohérence de TOUTES les productions futures.
 
-Le ID IP est la bible de référence qui garantit la cohérence de TOUTES les productions futures.
-
-ANALYSE :
+ANALYSE SOURCE :
 ${analysisJSON}
-
-HISTOIRE :
-${storyJSON}
 
 FORMAT DE RÉPONSE (JSON strict) :
 {
+  "synopsis": "Synopsis de l'histoire (3-5 phrases)",
   "characters": [
     {
       "name": "Nom",
       "description": "Description physique TRÈS détaillée (visage, corps, vêtements, posture, signes distinctifs)",
       "personality": "Traits de personnalité",
+      "role": "Rôle dans l'histoire",
       "color": "#hex",
       "visualPrompt": "Prompt de description visuelle optimisé pour génération d'image"
     }
+  ],
+  "arcs": [
+    { "title": "Titre de l'arc", "description": "Description de l'arc narratif" }
   ],
   "universe": "Description détaillée de l'univers (lieux, époque, atmosphère, règles)",
   "tone": "Ton narratif, registre de langue, ambiance émotionnelle",
@@ -909,7 +756,24 @@ function displayCanon(canon) {
   hideLoading('screen-3b-loading');
 
   const resultEl = document.getElementById('screen-3b-result');
+  if (!resultEl) return;
   resultEl.style.display = 'block';
+
+  // Synopsis
+  const synopsisEl = document.getElementById('canon-synopsis');
+  if (synopsisEl) synopsisEl.innerHTML = `<p>${canon.synopsis || ''}</p>`;
+
+  // Arcs
+  const arcsEl = document.getElementById('canon-arcs');
+  if (arcsEl) arcsEl.innerHTML = (canon.arcs || []).map((a, i) => `
+    <div class="arc-item">
+      <span class="arc-item__number">${i + 1}</span>
+      <div>
+        <h4 class="arc-item__title">${a.title}</h4>
+        <p class="arc-item__desc">${a.description}</p>
+      </div>
+    </div>
+  `).join('');
 
   // Personnages avec zone d'upload de référence
   const charsEl = document.getElementById('canon-characters');
@@ -1009,15 +873,25 @@ async function loadCharacterRefs() {
  * Sauvegarde le ID IP avec les modifications de l'utilisateur
  */
 function saveCanon() {
+  // Validate visual style is selected
+  if (!State.visualStyle || !State.visualStyle.styleId) {
+    alert('Veuillez choisir un style visuel avant de valider.');
+    return;
+  }
+
   const canon = State.idIP || {};
 
   // Récupérer les valeurs éditées
-  canon.universe = document.getElementById('canon-universe').value;
-  canon.tone = document.getElementById('canon-tone').value;
-  canon.constraints = document.getElementById('canon-constraints').value;
+  const universeEl = document.getElementById('canon-universe');
+  const toneEl = document.getElementById('canon-tone');
+  const constraintsEl = document.getElementById('canon-constraints');
+  if (universeEl) canon.universe = universeEl.value;
+  if (toneEl) canon.tone = toneEl.value;
+  if (constraintsEl) canon.constraints = constraintsEl.value;
 
   if (AppState.mode === 'peinture') {
-    canon.visualStyle = document.getElementById('canon-visual-style').value;
+    const vsEl = document.getElementById('canon-visual-style');
+    if (vsEl) canon.visualStyle = vsEl.value;
   }
 
   // Récupérer les descriptions éditées des personnages
@@ -1034,15 +908,16 @@ function saveCanon() {
   State.save();
 
   // Activer le bouton Continuer
-  document.getElementById('btn-next-screen3b').disabled = false;
+  const nextBtn = document.getElementById('btn-next-screen3b');
+  if (nextBtn) nextBtn.disabled = false;
 
   // Feedback visuel
-  const btn = document.querySelector('.action-row .btn--primary');
+  const btn = document.querySelector('#screen-3b .action-row .btn--primary');
   if (btn) {
-    btn.textContent = '✓ Canon validé';
+    btn.textContent = '✓ ID IP validé';
     btn.classList.add('btn--success');
     setTimeout(() => {
-      btn.textContent = 'Valider le canon';
+      btn.textContent = 'Valider l\'ID IP';
       btn.classList.remove('btn--success');
     }, 2000);
   }
@@ -1109,7 +984,6 @@ async function runEpisodes() {
  */
 function buildEpisodesPrompt() {
   const canonJSON = JSON.stringify(State.idIP, null, 2);
-  const storyJSON = JSON.stringify(State.story, null, 2);
 
   const formatInfo = AppState.mode === 'podcast'
     ? 'Format cible : WEBTOON (3 panneaux par épisode, narration visuelle avec bulles de dialogue)'
@@ -1117,11 +991,8 @@ function buildEpisodesPrompt() {
 
   return `Tu es un scénariste sérialisé. Découpe l'histoire suivante en exactement 5 ÉPISODES.
 
-CANON IP (à respecter STRICTEMENT) :
+ID IP (à respecter STRICTEMENT — contient synopsis, arcs, personnages et univers) :
 ${canonJSON}
-
-HISTOIRE :
-${storyJSON}
 
 ${formatInfo}
 
@@ -1403,55 +1274,6 @@ function checkAllScriptsDone() {
   }
 }
 
-// ============================================
-// ÉCRAN 5b — Choix du format de sortie
-// ============================================
-
-/**
- * Initialise l'écran 5b — met en surbrillance le format déjà choisi
- */
-function initScreen5b() {
-  if (AppState.outputFormat) {
-    highlightFormat(AppState.outputFormat);
-  }
-}
-
-/**
- * Sélectionne le format de sortie
- * @param {string} format — 'webtoon', 'micro-drama' ou 'both'
- */
-function selectFormat(format) {
-  AppState.outputFormat = format;
-  AppState.save();
-
-  // Feedback visuel
-  highlightFormat(format);
-
-  // Re-render le stepper avec les bonnes branches
-  if (typeof renderStepper === 'function') {
-    renderStepper();
-  }
-
-  // Naviguer vers l'écran suivant après un court délai
-  setTimeout(() => {
-    navigateTo('screen-6');
-  }, 400);
-}
-
-/**
- * Met en surbrillance la carte de format sélectionnée
- * @param {string} format — format sélectionné
- */
-function highlightFormat(format) {
-  document.querySelectorAll('.format-card').forEach(card => {
-    card.classList.remove('format-card--selected');
-  });
-  const selected = document.getElementById(`format-${format}`);
-  if (selected) {
-    selected.classList.add('format-card--selected');
-  }
-}
-
 /**
  * Initialisation de l'application au chargement de la page
  */
@@ -1464,6 +1286,17 @@ function initApp() {
   if (typeof initStepper === 'function') {
     initStepper(SCREENS, AppState);
   }
+
+  // Restore screen-0 selection state
+  if (AppState.mode) {
+    const el = document.getElementById(`mode-${AppState.mode}`);
+    if (el) el.classList.add('mode-card--selected');
+  }
+  if (AppState.outputFormat) {
+    const el = document.getElementById(`output-${AppState.outputFormat}`);
+    if (el) el.classList.add('format-card--selected');
+  }
+  checkStartReady();
 
   // Navigation par hash dans l'URL
   const hash = window.location.hash.replace('#', '');
