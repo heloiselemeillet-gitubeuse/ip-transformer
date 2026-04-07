@@ -6,16 +6,16 @@
  */
 const VISUAL_STYLES = {
   podcast: [
-    { id: 'manga', label: 'Manga', prompt: 'manga style, cel-shaded, vibrant colors, dynamic composition' },
-    { id: 'realistic', label: 'Réaliste', prompt: 'photorealistic, detailed, cinematic lighting, high quality' },
-    { id: 'cartoon', label: 'Cartoon', prompt: 'cartoon style, bold outlines, flat colors, playful' },
-    { id: 'manhwa', label: 'Manhwa', prompt: 'manhwa style, korean webtoon aesthetic, soft shading, elegant' },
+    { id: 'manga', label: 'Manga', icon: '⚡', desc: 'Cel-shaded, couleurs vibrantes, compositions dynamiques', prompt: 'manga style, cel-shaded, vibrant colors, dynamic composition' },
+    { id: 'realistic', label: 'Réaliste', icon: '📷', desc: 'Photoréaliste, éclairage cinématique, haute qualité', prompt: 'photorealistic, detailed, cinematic lighting, high quality' },
+    { id: 'cartoon', label: 'Cartoon', icon: '🎨', desc: 'Traits gras, aplats de couleurs, style ludique', prompt: 'cartoon style, bold outlines, flat colors, playful' },
+    { id: 'manhwa', label: 'Manhwa', icon: '✨', desc: 'Esthétique webtoon coréen, ombrage doux, élégant', prompt: 'manhwa style, korean webtoon aesthetic, soft shading, elegant' },
   ],
   peinture: [
-    { id: 'faithful', label: 'Fidèle à l\'artiste', prompt: 'faithful to the original art style, same technique and palette' },
-    { id: 'anime', label: 'Anime', prompt: 'anime adaptation, cel-shaded, maintaining original color palette' },
-    { id: 'stylized', label: 'Réaliste stylisé', prompt: 'stylized realism, painterly, detailed, artistic' },
-    { id: 'expressionist', label: 'Expressionniste', prompt: 'expressionist style, bold brushstrokes, emotional, dramatic' },
+    { id: 'faithful', label: 'Fidèle à l\'artiste', icon: '🖼️', desc: 'Technique et palette fidèles à l\'original', prompt: 'faithful to the original art style, same technique and palette' },
+    { id: 'anime', label: 'Anime', icon: '⚡', desc: 'Adaptation animée, palette d\'origine conservée', prompt: 'anime adaptation, cel-shaded, maintaining original color palette' },
+    { id: 'stylized', label: 'Réaliste stylisé', icon: '🎭', desc: 'Réalisme pictural, détaillé, artistique', prompt: 'stylized realism, painterly, detailed, artistic' },
+    { id: 'expressionist', label: 'Expressionniste', icon: '🔥', desc: 'Coups de pinceau marqués, émotionnel, dramatique', prompt: 'expressionist style, bold brushstrokes, emotional, dramatic' },
   ],
 };
 
@@ -68,15 +68,12 @@ function renderStyleCards() {
   container.innerHTML = styles.map(style => `
     <div class="style-card ${selectedStyle === style.id ? 'style-card--selected' : ''}"
          data-style="${style.id}" onclick="selectStyle('${style.id}')">
-      <div class="style-card__preview" id="style-preview-${style.id}">
-        <div class="style-card__placeholder">
-          <button class="btn btn--small btn--secondary" onclick="event.stopPropagation(); generateStylePreview('${style.id}')">
-            Générer un aperçu
-          </button>
-        </div>
+      <div class="style-card__preview style-card__preview--static">
+        <span class="style-card__icon">${style.icon || '🎨'}</span>
       </div>
       <div class="style-card__info">
         <h4 class="style-card__label">${style.label}</h4>
+        <p class="style-card__desc">${style.desc || ''}</p>
       </div>
     </div>
   `).join('');

@@ -1281,8 +1281,15 @@ body {
   font-size: 13px;
 }
 
+.style-card__preview--static {
+  background: linear-gradient(135deg, var(--bg-card) 0%, rgba(233, 30, 144, 0.04) 100%);
+  min-height: 100px;
+  aspect-ratio: auto;
+}
+.style-card__icon { font-size: 40px; }
 .style-card__info { padding: 12px; text-align: center; }
 .style-card__label { font-size: 14px; font-weight: 700; }
+.style-card__desc { font-size: 12px; color: var(--text-secondary); margin-top: 4px; line-height: 1.4; }
 
 /* Palette options */
 .palette-row {
