@@ -5,6 +5,7 @@
 // Modèles Replicate supportés
 const MODELS = {
   'flux-redux-dev': 'black-forest-labs/flux-redux-dev',
+  'flux-schnell': 'black-forest-labs/flux-schnell',
   'wan-2.1': 'wan-ai/wan2.1-t2v-14b',
   'whisper': 'openai/whisper',
 };
@@ -89,8 +90,9 @@ async function handlePredict(request, env, corsHeaders) {
     });
   }
 
-  // Appeler l'API Replicate pour créer la prédiction
-  const response = await fetch('https://api.replicate.com/v1/predictions', {
+  // Appeler l'API Replicate — endpoint par modèle (owner/name)
+  const apiUrl = `https://api.replicate.com/v1/models/${modelVersion}/predictions`;
+  const response = await fetch(apiUrl, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${env.REPLICATE_API_TOKEN}`,
@@ -98,7 +100,6 @@ async function handlePredict(request, env, corsHeaders) {
       'Prefer': 'respond-async',
     },
     body: JSON.stringify({
-      model: modelVersion,
       input: input,
     }),
   });

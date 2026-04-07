@@ -23,20 +23,31 @@ const REPLICATE_POLL_INTERVAL = 5000;
  * @returns {Promise<string>} — prediction_id
  */
 async function replicateStartFluxRedux(params) {
-  const response = await fetch(`${REPLICATE_WORKER}/predict`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      model: 'flux-redux-dev',
-      input: {
+  // Si pas d'image de référence, utiliser flux-schnell (text-to-image)
+  // Sinon utiliser flux-redux-dev (image + text)
+  const hasImageRef = !!params.imageRef;
+  const model = hasImageRef ? 'flux-redux-dev' : 'flux-schnell';
+
+  const input = hasImageRef
+    ? {
         prompt: params.prompt,
-        image: params.imageRef ? `data:image/png;base64,${params.imageRef}` : undefined,
+        image: `data:image/png;base64,${params.imageRef}`,
         width: params.width || 720,
         height: params.height || 1280,
         num_outputs: 1,
         guidance_scale: 3.5,
-      },
-    }),
+      }
+    : {
+        prompt: params.prompt,
+        width: params.width || 720,
+        height: params.height || 1280,
+        num_outputs: 1,
+      };
+
+  const response = await fetch(`${REPLICATE_WORKER}/predict`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ model, input }),
   });
 
   if (!response.ok) {

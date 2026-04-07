@@ -10,13 +10,14 @@ const API_CONFIG = {
   isDev: window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1',
 
   get apiProxy() {
-    return this.isDev ? 'http://localhost:8787' : 'https://api-proxy.heloise-lemeillet.workers.dev';
+    // Temporaire : toujours utiliser les Workers Cloudflare pour le test E2E
+    return 'https://api-proxy.heloise-lemeillet.workers.dev';
   },
   get replicateProxy() {
-    return this.isDev ? 'http://localhost:8788' : 'https://replicate-proxy.heloise-lemeillet.workers.dev';
+    return 'https://replicate-proxy.heloise-lemeillet.workers.dev';
   },
   get youtubeProxy() {
-    return this.isDev ? 'http://localhost:8789' : 'https://youtube-proxy.heloise-lemeillet.workers.dev';
+    return 'https://youtube-proxy.heloise-lemeillet.workers.dev';
   },
 };
 
