@@ -369,7 +369,17 @@ function initScreen2() {
  */
 async function runAnalysis() {
   const resultEl = document.getElementById('screen-2-result');
-  resultEl.style.display = 'none';
+  if (resultEl) resultEl.style.display = 'none';
+
+  // Vérifier que le transcript existe (mode podcast)
+  if (AppState.mode === 'podcast' && !State.transcriptText) {
+    if (resultEl) {
+      resultEl.style.display = 'block';
+      resultEl.innerHTML = `<div class="card"><p class="status--error">Aucun transcript chargé. Retournez à l'écran Assets pour importer un fichier.</p>
+        <button class="btn btn--secondary" onclick="navigateTo('screen-1')" style="margin-top:16px">← Retour aux Assets</button></div>`;
+    }
+    return;
+  }
 
   // Afficher le chargement
   showLoading('screen-2-loading', 'claude', {
@@ -407,9 +417,11 @@ async function runAnalysis() {
   } catch (err) {
     hideLoading('screen-2-loading');
     const resultEl = document.getElementById('screen-2-result');
-    resultEl.style.display = 'block';
-    resultEl.innerHTML = `<div class="card"><p class="status--error">Erreur : ${err.message}</p>
-      <button class="btn btn--primary" onclick="runAnalysis()" style="margin-top:16px">Réessayer</button></div>`;
+    if (resultEl) {
+      resultEl.style.display = 'block';
+      resultEl.innerHTML = `<div class="card"><p class="status--error">Erreur : ${err.message}</p>
+        <button class="btn btn--primary" onclick="runAnalysis()" style="margin-top:16px">Réessayer</button></div>`;
+    }
   }
 }
 
@@ -440,7 +452,7 @@ FORMAT DE RÉPONSE (JSON strict) :
 }
 
 TRANSCRIPT :
-${transcript.substring(0, 15000)}`;
+${(transcript || '').substring(0, 15000)}`;
 }
 
 /**
