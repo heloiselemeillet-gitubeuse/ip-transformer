@@ -68,32 +68,13 @@
 
         <h2 class="screen__title">Chargez votre IP source</h2>
 
-        <!-- MODE PODCAST : lien YouTube + transcript -->
+        <!-- MODE PODCAST : transcript d'abord (gratuit), YouTube en option -->
         <div id="asset-podcast" class="asset-loader" style="display: none;">
 
-          <!-- Lien YouTube -->
+          <!-- Upload transcript (option principale — gratuit) -->
           <div class="card">
-            <h3 class="card__title">Lien YouTube</h3>
-            <p class="card__desc">Collez l'URL d'un podcast YouTube. Les sous-titres seront extraits automatiquement.</p>
-            <div class="input-group">
-              <input
-                type="url"
-                id="youtube-url"
-                class="input"
-                placeholder="https://www.youtube.com/watch?v=..."
-                oninput="validateYoutubeUrl()"
-              >
-              <button class="btn btn--primary" id="btn-fetch-transcript" onclick="fetchTranscript()" disabled>
-                Extraire le transcript
-              </button>
-            </div>
-            <div id="youtube-status" class="status-message"></div>
-          </div>
-
-          <!-- Upload transcript (alternative) -->
-          <div class="card">
-            <h3 class="card__title">Ou importez un transcript</h3>
-            <p class="card__desc">Fichier .txt, .srt ou .vtt déjà existant.</p>
+            <h3 class="card__title">Importez votre transcript</h3>
+            <p class="card__desc">Fichier .txt, .srt ou .vtt. <strong>Option recommandée</strong> — aucun coût API.</p>
             <label class="upload-zone" id="transcript-upload-zone">
               <input
                 type="file"
@@ -109,6 +90,37 @@
               </div>
             </label>
             <div id="transcript-file-status" class="status-message"></div>
+          </div>
+
+          <!-- Checkbox pour révéler l'option YouTube -->
+          <div class="card card--option">
+            <label class="checkbox-label" style="cursor: pointer; display: flex; align-items: center; gap: 10px;">
+              <input
+                type="checkbox"
+                id="no-transcript-checkbox"
+                onchange="toggleYoutubeSection()"
+              >
+              <span>Je n'ai pas de transcript — extraire depuis YouTube</span>
+            </label>
+          </div>
+
+          <!-- Lien YouTube (caché par défaut) -->
+          <div id="youtube-section" class="card" style="display: none;">
+            <h3 class="card__title">Lien YouTube</h3>
+            <p class="card__desc">Collez l'URL d'un podcast YouTube. Les sous-titres seront extraits automatiquement. <span class="badge badge--warn">Coût API</span></p>
+            <div class="input-group">
+              <input
+                type="url"
+                id="youtube-url"
+                class="input"
+                placeholder="https://www.youtube.com/watch?v=..."
+                oninput="validateYoutubeUrl()"
+              >
+              <button class="btn btn--primary" id="btn-fetch-transcript" onclick="fetchTranscript()" disabled>
+                Extraire le transcript
+              </button>
+            </div>
+            <div id="youtube-status" class="status-message"></div>
           </div>
 
         </div>

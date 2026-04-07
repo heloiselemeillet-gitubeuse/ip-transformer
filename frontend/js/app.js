@@ -184,6 +184,17 @@ function initScreen1() {
 }
 
 /**
+ * Affiche/masque la section YouTube selon la checkbox
+ */
+function toggleYoutubeSection() {
+  const checkbox = document.getElementById('no-transcript-checkbox');
+  const youtubeSection = document.getElementById('youtube-section');
+  if (youtubeSection) {
+    youtubeSection.style.display = checkbox.checked ? 'block' : 'none';
+  }
+}
+
+/**
  * Valide le format d'une URL YouTube et active/désactive le bouton
  */
 function validateYoutubeUrl() {
