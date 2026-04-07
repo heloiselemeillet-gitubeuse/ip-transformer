@@ -65,7 +65,7 @@ function selectGenEpisode(episodeNum) {
  */
 async function generateEpisodeImages(episodeNum) {
   const resultEl = document.getElementById('screen-7-result');
-  resultEl.style.display = 'none';
+  if (resultEl) resultEl.style.display = 'none';
 
   // Récupérer le script de l'épisode
   const script = State.scripts ? State.scripts[episodeNum] : null;
@@ -99,9 +99,15 @@ async function generateEpisodeImages(episodeNum) {
   const stylePrompt = visualStyle.stylePrompt || '';
   const palettePrompt = `${visualStyle.temperature || 'neutral'} palette, ${visualStyle.contrast || 'contrasted'} lighting`;
 
-  // Générer chaque image séquentiellement
+  // Générer chaque image séquentiellement avec délai anti rate-limit
   for (let i = 0; i < total; i++) {
     const scene = scenes[i];
+
+    // Délai de 5s entre les appels Replicate (sauf le premier)
+    if (i > 0) {
+      updateLoadingProgress('screen-7-loading', ((i) / total) * 100, `Pause avant scène ${i + 1}… (anti rate-limit)`);
+      await new Promise(resolve => setTimeout(resolve, 5000));
+    }
 
     updateLoadingCounter('screen-7-loading', i + 1, total);
     updateLoadingProgress('screen-7-loading', ((i) / total) * 100, `Scène ${i + 1} — ${scene.title || ''}`);
@@ -186,13 +192,14 @@ function displayGenImages(episodeNum) {
   hideLoading('screen-7-loading');
 
   const resultEl = document.getElementById('screen-7-result');
-  resultEl.style.display = 'block';
+  if (resultEl) resultEl.style.display = 'block';
 
   const images = generatedImages[episodeNum] || [];
   const script = State.scripts ? State.scripts[episodeNum] : null;
   const scenes = (script && script.scenes) || [];
 
   const gridEl = document.getElementById('gen-images-grid');
+  if (!gridEl) return;
   gridEl.innerHTML = images.map((img, i) => {
     const scene = scenes[i] || {};
     return `
