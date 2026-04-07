@@ -35,23 +35,33 @@ const AppState = {
   mode: null,           // 'podcast' ou 'peinture'
   outputFormat: null,   // 'webtoon', 'micro-drama' ou 'both'
 
-  /** Sauvegarde l'état dans localStorage */
+  /** Sauvegarde l'état dans localStorage (clé séparée de State) */
   save() {
-    localStorage.setItem('ip-transformer-state', JSON.stringify({
+    localStorage.setItem('ip-transformer-app', JSON.stringify({
       currentScreen: this.currentScreen,
       mode: this.mode,
       outputFormat: this.outputFormat,
     }));
+    // Synchroniser aussi avec State pour persistance globale
+    State.currentScreen = this.currentScreen;
+    State.mode = this.mode;
+    State.outputFormat = this.outputFormat;
+    State.save();
   },
 
   /** Restaure l'état depuis localStorage */
   load() {
-    const saved = localStorage.getItem('ip-transformer-state');
+    const saved = localStorage.getItem('ip-transformer-app');
     if (saved) {
       const data = JSON.parse(saved);
       this.currentScreen = data.currentScreen || 'screen-0';
       this.mode = data.mode || null;
       this.outputFormat = data.outputFormat || null;
+    } else {
+      // Fallback : lire depuis State (migration)
+      this.currentScreen = State.currentScreen || 'screen-0';
+      this.mode = State.mode || null;
+      this.outputFormat = State.outputFormat || null;
     }
   },
 };
@@ -542,11 +552,15 @@ function displayAnalysis(analysis) {
   hideLoading('screen-2-loading');
 
   const resultEl = document.getElementById('screen-2-result');
+  if (!resultEl) return;
   resultEl.style.display = 'block';
 
+  const podcastEl = document.getElementById('analysis-podcast');
+  const peintureEl = document.getElementById('analysis-peinture');
+
   if (analysis._mode === 'podcast') {
-    document.getElementById('analysis-podcast').style.display = 'block';
-    document.getElementById('analysis-peinture').style.display = 'none';
+    if (podcastEl) podcastEl.style.display = 'block';
+    if (peintureEl) peintureEl.style.display = 'none';
 
     // Intervenants
     const speakersEl = document.getElementById('analysis-speakers');
@@ -579,8 +593,8 @@ function displayAnalysis(analysis) {
     `).join('');
 
   } else {
-    document.getElementById('analysis-podcast').style.display = 'none';
-    document.getElementById('analysis-peinture').style.display = 'block';
+    if (podcastEl) podcastEl.style.display = 'none';
+    if (peintureEl) peintureEl.style.display = 'block';
 
     // Univers visuel
     document.getElementById('analysis-visual').innerHTML = `<p>${analysis.visual || ''}</p>`;
