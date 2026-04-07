@@ -335,6 +335,20 @@ async function startAutoBatch() {
 }
 
 /**
+ * Approuve toutes les images en attente d'un épisode
+ * @param {number} episodeNum — numéro de l'épisode
+ */
+function approveAllImages(episodeNum) {
+  if (!generatedImages[episodeNum]) return;
+  generatedImages[episodeNum].forEach(img => {
+    if (img.url && img.status !== 'error') img.status = 'approved';
+  });
+  State.generatedImages = generatedImages;
+  State.save();
+  displayGenImages(episodeNum);
+}
+
+/**
  * Vérifie si l'écran 7 est prêt (au moins épisode 1 toutes images approuvées)
  */
 function checkScreen7Ready() {
@@ -348,5 +362,13 @@ function checkScreen7Ready() {
   const batchBtn = document.getElementById('btn-auto-batch');
   if (batchBtn) {
     batchBtn.style.display = ep1AllApproved ? 'inline-block' : 'none';
+  }
+
+  // Afficher/masquer le bouton "Tout approuver"
+  const currentImages = generatedImages[currentGenEpisode] || [];
+  const hasPending = currentImages.some(img => img.url && img.status !== 'approved' && img.status !== 'error');
+  const approveAllBtn = document.getElementById('btn-approve-all');
+  if (approveAllBtn) {
+    approveAllBtn.style.display = hasPending ? 'inline-flex' : 'none';
   }
 }

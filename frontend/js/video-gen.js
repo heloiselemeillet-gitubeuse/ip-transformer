@@ -287,7 +287,7 @@ function buildVideoPrompt(scene) {
 Camera: ${scene.cameraNote || 'plan moyen'}
 Mood: ${scene.mood || ''}
 
-CANON IP (style et fidélité) :
+ID IP (style et fidélité) :
 ${canonJSON}
 
 Style: cinematic, high quality, smooth motion, 9:16 vertical format`;

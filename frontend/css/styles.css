@@ -2230,3 +2230,79 @@ body {
   flex-direction: column;
   gap: 24px;
 }
+
+/* ============================================
+   POC Corrections — Additional styles
+   ============================================ */
+
+/* Selectable analysis items (screen-2 checkboxes) */
+.analysis-item--selectable {
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: var(--radius-btn);
+  transition: background var(--transition-hover);
+}
+.analysis-item--selectable:hover {
+  background: rgba(233, 30, 144, 0.04);
+}
+.analysis-item--selectable .checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+.analysis-item--selectable input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent-primary);
+  flex-shrink: 0;
+}
+
+/* Editable fields in episodes */
+.episode-title-input {
+  font-size: 18px;
+  font-weight: 700;
+  border: 1px dashed var(--border);
+  background: transparent;
+  padding: 4px 8px;
+  width: 100%;
+}
+.episode-title-input:focus {
+  border-color: var(--accent-primary);
+  background: var(--surface, #fff);
+}
+.episode-summary-input,
+.episode-hook-input,
+.episode-cliffhanger-input {
+  width: 100%;
+  border: 1px dashed var(--border);
+  background: transparent;
+  padding: 4px 8px;
+  font-size: 14px;
+  font-family: inherit;
+  resize: vertical;
+}
+.episode-summary-input:focus,
+.episode-hook-input:focus,
+.episode-cliffhanger-input:focus {
+  border-color: var(--accent-primary);
+  background: var(--surface, #fff);
+}
+
+/* Hook and cliffhanger styling */
+.episode-card__hook {
+  padding: 8px 12px;
+  background: rgba(0, 200, 83, 0.08);
+  border-left: 3px solid var(--success);
+  border-radius: 4px;
+  font-size: 14px;
+  margin-bottom: 12px;
+}
+.episode-card__cliffhanger {
+  padding: 8px 12px;
+  background: rgba(233, 30, 144, 0.08);
+  border-left: 3px solid var(--accent-primary);
+  border-radius: 4px;
+  font-size: 14px;
+  margin-top: 12px;
+}

@@ -22,7 +22,7 @@ const State = {
   // Écran 2 — Analyse
   analysis: null,         // Résultat de l'analyse IA
 
-  // Écran 3b — Canon IP (includes synopsis, arcs, characters, style)
+  // Écran 3b — ID IP (includes synopsis, arcs, characters, style)
   idIP: null,          // Bible de marque / verrou de fidélité
 
   // Écran 4 — Épisodes

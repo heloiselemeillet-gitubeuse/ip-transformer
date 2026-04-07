@@ -65,6 +65,13 @@ const AppState = {
  * @param {string} screenId — l'id de l'écran cible (ex: 'screen-2')
  */
 function navigateTo(screenId) {
+  // Avant de quitter l'écran 2, filtrer les éléments sélectionnés
+  if (AppState.currentScreen === 'screen-2' && screenId !== 'screen-2') {
+    if (typeof getSelectedAnalysisItems === 'function') {
+      getSelectedAnalysisItems();
+    }
+  }
+
   // Masquer tous les écrans
   const allScreens = document.querySelectorAll('.screen');
   allScreens.forEach(screen => {
@@ -465,18 +472,26 @@ RÈGLES :
 - NE PAS inventer de faits. Adapter la forme, pas le fond.
 - Les citations doivent être EXACTES (verbatim du transcript).
 
+ANONYMISATION DES PERSONNAGES :
+- N'afficher que les PRÉNOMS (pas de noms de famille)
+- Remplacer les noms de sociétés par des descriptions génériques (ex: "une entreprise française de robotique")
+- Standardiser les typologies : "un entrepreneur français", "un journaliste spécialisé"
+- Si deux noms semblent désigner la même personne (prénom seul + nom complet), FUSIONNER en un seul personnage
+
 FORMAT DE RÉPONSE (JSON strict) :
 {
   "speakers": [
-    { "name": "Nom", "role": "Rôle/description", "color": "#hex" }
+    { "name": "Prénom", "role": "Rôle/description", "color": "#hex" }
   ],
   "facts": [
     { "title": "Thème", "description": "Résumé du fait" }
   ],
   "quotes": [
-    { "text": "Citation exacte", "speaker": "Nom de l'intervenant" }
+    { "text": "Citation exacte", "speaker": "Prénom de l'intervenant" }
   ]
 }
+
+IMPORTANT : Extraire environ 15-20 faits et 15-20 citations pour offrir un choix large à l'utilisateur.
 
 TRANSCRIPT :
 ${(transcript || '').substring(0, 15000)}`;
@@ -581,32 +596,45 @@ function displayAnalysis(analysis) {
 
     // Intervenants
     const speakersEl = document.getElementById('analysis-speakers');
-    speakersEl.innerHTML = (analysis.speakers || []).map(s => `
-      <div class="analysis-item">
-        <span class="analysis-item__badge" style="background:${s.color || 'var(--accent-primary)'}"></span>
-        <div>
-          <strong>${s.name}</strong>
-          <span class="analysis-item__detail">${s.role || ''}</span>
-        </div>
+    if (speakersEl) speakersEl.innerHTML = (analysis.speakers || []).map((s, i) => `
+      <div class="analysis-item analysis-item--selectable">
+        <label class="checkbox-label">
+          <input type="checkbox" class="analysis-checkbox" data-type="speaker" data-index="${i}" checked>
+          <span class="analysis-item__badge" style="background:${s.color || 'var(--accent-primary)'}"></span>
+          <div>
+            <strong>${s.name}</strong>
+            <span class="analysis-item__detail">${s.role || ''}</span>
+          </div>
+        </label>
       </div>
     `).join('');
 
     // Faits
     const factsEl = document.getElementById('analysis-facts');
-    factsEl.innerHTML = (analysis.facts || []).map(f => `
-      <div class="analysis-item">
-        <strong>${f.title}</strong>
-        <p class="analysis-item__detail">${f.description}</p>
+    if (factsEl) factsEl.innerHTML = (analysis.facts || []).map((f, i) => `
+      <div class="analysis-item analysis-item--selectable">
+        <label class="checkbox-label">
+          <input type="checkbox" class="analysis-checkbox" data-type="fact" data-index="${i}" checked>
+          <div>
+            <strong>${f.title}</strong>
+            <p class="analysis-item__detail">${f.description}</p>
+          </div>
+        </label>
       </div>
     `).join('');
 
     // Citations
     const quotesEl = document.getElementById('analysis-quotes');
-    quotesEl.innerHTML = (analysis.quotes || []).map(q => `
-      <blockquote class="quote-block">
-        <p class="quote-block__text">"${q.text}"</p>
-        <cite class="quote-block__author">— ${q.speaker}</cite>
-      </blockquote>
+    if (quotesEl) quotesEl.innerHTML = (analysis.quotes || []).map((q, i) => `
+      <div class="analysis-item analysis-item--selectable">
+        <label class="checkbox-label">
+          <input type="checkbox" class="analysis-checkbox" data-type="quote" data-index="${i}" checked>
+          <blockquote class="quote-block" style="margin:0;flex:1;">
+            <p class="quote-block__text">"${q.text}"</p>
+            <cite class="quote-block__author">— ${q.speaker}</cite>
+          </blockquote>
+        </label>
+      </div>
     `).join('');
 
   } else {
@@ -639,7 +667,42 @@ function displayAnalysis(analysis) {
   }
 
   // Activer le bouton Continuer
-  document.getElementById('btn-next-screen2').disabled = false;
+  const btnNext2 = document.getElementById('btn-next-screen2');
+  if (btnNext2) btnNext2.disabled = false;
+}
+
+/**
+ * Lit les checkboxes cochées sur l'écran 2 et retourne uniquement les éléments sélectionnés.
+ * Met à jour State.analysis pour ne conserver que la sélection.
+ */
+function getSelectedAnalysisItems() {
+  if (!State.analysis) return;
+  const analysis = State.analysis;
+
+  const checkboxes = document.querySelectorAll('.analysis-checkbox');
+  if (!checkboxes.length) return; // Pas de checkboxes (mode peinture ou pas encore rendu)
+
+  const selected = { speakers: [], facts: [], quotes: [] };
+
+  checkboxes.forEach(cb => {
+    if (!cb.checked) return;
+    const type = cb.dataset.type;
+    const idx = parseInt(cb.dataset.index);
+    if (type === 'speaker' && analysis.speakers && analysis.speakers[idx]) {
+      selected.speakers.push(analysis.speakers[idx]);
+    } else if (type === 'fact' && analysis.facts && analysis.facts[idx]) {
+      selected.facts.push(analysis.facts[idx]);
+    } else if (type === 'quote' && analysis.quotes && analysis.quotes[idx]) {
+      selected.quotes.push(analysis.quotes[idx]);
+    }
+  });
+
+  // Mettre à jour State.analysis avec la sélection uniquement
+  analysis.speakers = selected.speakers;
+  analysis.facts = selected.facts;
+  analysis.quotes = selected.quotes;
+  State.analysis = analysis;
+  State.save();
 }
 
 // ============================================
@@ -707,6 +770,12 @@ function buildCanonPrompt() {
 
 ANALYSE SOURCE :
 ${analysisJSON}
+
+DESCRIPTIONS VISUELLES DES PERSONNAGES :
+- Éviter les clichés visuels liés au métier (PAS de costume pour un entrepreneur, PAS de blouse pour un scientifique)
+- Privilégier des tenues décontractées, contemporaines, style "nouvelle génération"
+- Ne PAS projeter le rôle/métier sur l'apparence physique
+- Décrire des personnes modernes et réalistes, pas des archétypes
 
 FORMAT DE RÉPONSE (JSON strict) :
 {
@@ -1010,9 +1079,10 @@ FORMAT DE RÉPONSE (JSON strict) :
     {
       "number": 1,
       "title": "Titre de l'épisode",
-      "synopsis": "Synopsis détaillé (3-5 phrases)",
-      "hook": "Accroche ou cliffhanger de fin d'épisode",
-      "keyMoments": ["Moment clé 1", "Moment clé 2", "Moment clé 3"]
+      "hook": "Accroche de début — pourquoi on commence à regarder",
+      "summary": "Résumé détaillé de l'épisode (3-5 phrases)",
+      "cliffhanger": "Fin de l'épisode — pourquoi on veut voir la suite",
+      "keyFacts": ["Fait clé 1", "Fait clé 2", "Fait clé 3"]
     }
   ]
 }`;
@@ -1029,24 +1099,42 @@ function displayEpisodes(episodes) {
   resultEl.style.display = 'block';
 
   const listEl = document.getElementById('episodes-list');
+  if (!listEl) return;
   listEl.innerHTML = (Array.isArray(episodes) ? episodes : []).map((ep, i) => `
     <div class="episode-card" data-episode="${ep.number || i + 1}">
       <div class="episode-card__header">
         <span class="episode-card__number">EP ${ep.number || i + 1}</span>
-        <h3 class="episode-card__title">${ep.title || ''}</h3>
+        <input class="input episode-title-input" value="${(ep.title || '').replace(/"/g, '&quot;')}" data-ep="${i}" onchange="updateEpisodeField(${i}, 'title', this.value)">
       </div>
-      <p class="episode-card__synopsis">${ep.synopsis || ''}</p>
+      <div class="episode-card__hook">🎣 <strong>Hook :</strong>
+        <textarea class="textarea episode-hook-input" rows="2" data-ep="${i}" onchange="updateEpisodeField(${i}, 'hook', this.value)">${ep.hook || ''}</textarea>
+      </div>
+      <textarea class="textarea episode-summary-input" rows="3" data-ep="${i}" onchange="updateEpisodeField(${i}, 'summary', this.value)">${ep.summary || ep.synopsis || ''}</textarea>
+      <div class="episode-card__cliffhanger">⚡ <strong>Cliffhanger :</strong>
+        <textarea class="textarea episode-cliffhanger-input" rows="2" data-ep="${i}" onchange="updateEpisodeField(${i}, 'cliffhanger', this.value)">${ep.cliffhanger || ''}</textarea>
+      </div>
       <div class="episode-card__moments">
-        ${(ep.keyMoments || []).map(m => `<span class="episode-card__moment">${m}</span>`).join('')}
-      </div>
-      <div class="episode-card__hook">
-        <strong>Accroche :</strong> ${ep.hook || ''}
+        ${(ep.keyFacts || ep.keyMoments || []).map(m => `<span class="episode-card__moment">${m}</span>`).join('')}
       </div>
     </div>
   `).join('');
 
   // Activer le bouton Continuer
-  document.getElementById('btn-next-screen4').disabled = false;
+  const btnNext4 = document.getElementById('btn-next-screen4');
+  if (btnNext4) btnNext4.disabled = false;
+}
+
+/**
+ * Met à jour un champ d'un épisode (titre, summary, hook, cliffhanger)
+ * @param {number} epIndex — index de l'épisode dans le tableau
+ * @param {string} field — nom du champ
+ * @param {string} value — nouvelle valeur
+ */
+function updateEpisodeField(epIndex, field, value) {
+  if (State.episodes && State.episodes[epIndex]) {
+    State.episodes[epIndex][field] = value;
+    State.save();
+  }
 }
 
 // ============================================
@@ -1166,7 +1254,7 @@ Indiquer les dialogues (voix-off ou sous-titres).`;
 
   return `Tu es un scénariste professionnel. Écris le script détaillé de l'épisode ${episodeNum} avec exactement 3 SOUS-SCÈNES.
 
-CANON IP (à respecter STRICTEMENT) :
+ID IP (à respecter STRICTEMENT) :
 ${canonJSON}
 
 ÉPISODE À DÉTAILLER :
@@ -1179,7 +1267,7 @@ RÈGLES :
 - Chaque sous-scène doit être autonome visuellement
 - Descriptions visuelles TRÈS détaillées (pour génération d'image/vidéo)
 - Dialogues fidèles au ID IP
-- Rester FIDÈLE au ton et aux contraintes du canon
+- Rester FIDÈLE au ton et aux contraintes de l'ID IP
 
 FORMAT DE RÉPONSE (JSON strict) :
 {
@@ -1211,26 +1299,27 @@ function displayScript(script) {
   resultEl.style.display = 'block';
 
   const scenesEl = document.getElementById('script-scenes');
+  if (!scenesEl) return;
   scenesEl.innerHTML = (script.scenes || []).map((scene, i) => `
     <div class="scene-card">
       <div class="scene-card__header">
         <span class="scene-card__number">Scène ${scene.sceneNumber || i + 1}</span>
-        <h3 class="scene-card__title">${scene.title || ''}</h3>
+        <input class="input episode-title-input" value="${(scene.title || '').replace(/"/g, '&quot;')}" onchange="updateScriptField(${currentScriptEpisode}, ${i}, 'title', this.value)">
         <span class="scene-card__duration">${scene.duration || '~15s'}</span>
       </div>
 
       <div class="scene-card__section">
         <h4 class="scene-card__label">Description visuelle</h4>
-        <p class="scene-card__text">${scene.visualDescription || ''}</p>
+        <textarea class="textarea episode-summary-input" rows="3" onchange="updateScriptField(${currentScriptEpisode}, ${i}, 'visualDescription', this.value)">${scene.visualDescription || ''}</textarea>
       </div>
 
       <div class="scene-card__section">
         <h4 class="scene-card__label">Dialogues</h4>
         <div class="scene-card__dialogues">
-          ${(scene.dialogue || []).map(d => `
+          ${(scene.dialogue || []).map((d, di) => `
             <div class="dialogue-line">
               <span class="dialogue-line__speaker">${d.speaker}</span>
-              <span class="dialogue-line__text">"${d.text}"</span>
+              <input class="input" style="flex:1;font-size:14px;" value="${(d.text || '').replace(/"/g, '&quot;')}" onchange="updateScriptDialogue(${currentScriptEpisode}, ${i}, ${di}, this.value)">
             </div>
           `).join('')}
           ${(scene.dialogue || []).length === 0 ? '<p class="scene-card__text--muted">Pas de dialogue</p>' : ''}
@@ -1243,6 +1332,37 @@ function displayScript(script) {
       </div>
     </div>
   `).join('');
+}
+
+/**
+ * Met à jour un champ d'une scène de script
+ * @param {number} epNum — numéro d'épisode
+ * @param {number} sceneIndex — index de la scène
+ * @param {string} field — nom du champ
+ * @param {string} value — nouvelle valeur
+ */
+function updateScriptField(epNum, sceneIndex, field, value) {
+  if (State.scripts && State.scripts[epNum] && State.scripts[epNum].scenes && State.scripts[epNum].scenes[sceneIndex]) {
+    State.scripts[epNum].scenes[sceneIndex][field] = value;
+    State.save();
+  }
+}
+
+/**
+ * Met à jour le texte d'une réplique de dialogue
+ * @param {number} epNum — numéro d'épisode
+ * @param {number} sceneIndex — index de la scène
+ * @param {number} dialogueIndex — index de la réplique
+ * @param {string} value — nouveau texte
+ */
+function updateScriptDialogue(epNum, sceneIndex, dialogueIndex, value) {
+  if (State.scripts && State.scripts[epNum] && State.scripts[epNum].scenes && State.scripts[epNum].scenes[sceneIndex]) {
+    const dialogue = State.scripts[epNum].scenes[sceneIndex].dialogue;
+    if (dialogue && dialogue[dialogueIndex]) {
+      dialogue[dialogueIndex].text = value;
+      State.save();
+    }
+  }
 }
 
 /**

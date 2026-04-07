@@ -181,7 +181,8 @@
       <div class="screen__content">
 
         <h2 class="screen__title">Analyse de votre IP</h2>
-        <p class="screen__desc">L'IA analyse votre source pour en extraire les éléments clés.</p>
+        <p class="screen__desc">L'IA analyse votre source pour en extraire les éléments clés.<br>
+        <em>Sélectionnez les éléments à conserver pour la suite.</em></p>
 
         <!-- Zone de chargement (affiché pendant l'analyse) -->
         <div id="screen-2-loading"></div>
@@ -246,14 +247,14 @@
 
         <h2 class="screen__title">ID IP — Bible de marque</h2>
         <p class="screen__desc">
-          Ce canon sera envoyé dans chaque prompt IA suivant. C'est le verrou de fidélité de votre IP.
+          Cet ID IP sera envoyé dans chaque prompt IA suivant. C'est le verrou de fidélité de votre IP.
           Vérifiez et ajustez avant de continuer.
         </p>
 
         <!-- Zone de chargement -->
         <div id="screen-3b-loading"></div>
 
-        <!-- Résultat du canon -->
+        <!-- Résultat de l'ID IP -->
         <div id="screen-3b-result" style="display: none;">
 
           <!-- Synopsis -->
@@ -326,7 +327,7 @@
 
           <!-- Actions -->
           <div class="action-row">
-            <button class="btn btn--secondary" onclick="regenerateCanon()">Régénérer le canon</button>
+            <button class="btn btn--secondary" onclick="regenerateCanon()">Régénérer l'ID IP</button>
             <button class="btn btn--primary" onclick="saveCanon()">Valider l'ID IP</button>
           </div>
 
@@ -429,8 +430,11 @@
         <div id="screen-7-result" style="display: none;">
           <div id="gen-images-grid" class="gen-images-grid"></div>
 
-          <!-- Auto-batch -->
+          <!-- Actions -->
           <div class="action-row">
+            <button class="btn btn--primary" id="btn-approve-all" onclick="approveAllImages(currentGenEpisode)" style="display: none;">
+              ✓ Tout approuver
+            </button>
             <button class="btn btn--secondary" id="btn-auto-batch" onclick="startAutoBatch()" style="display: none;">
               Auto-batch épisodes 2-5
             </button>

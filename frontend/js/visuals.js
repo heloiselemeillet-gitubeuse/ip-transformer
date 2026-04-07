@@ -6,7 +6,7 @@
  */
 const VISUAL_STYLES = {
   podcast: [
-    { id: 'anime', label: 'Anime', prompt: 'anime style, cel-shaded, vibrant colors, manga aesthetic' },
+    { id: 'manga', label: 'Manga', prompt: 'manga style, cel-shaded, vibrant colors, dynamic composition' },
     { id: 'realistic', label: 'Réaliste', prompt: 'photorealistic, detailed, cinematic lighting, high quality' },
     { id: 'cartoon', label: 'Cartoon', prompt: 'cartoon style, bold outlines, flat colors, playful' },
     { id: 'manhwa', label: 'Manhwa', prompt: 'manhwa style, korean webtoon aesthetic, soft shading, elegant' },
