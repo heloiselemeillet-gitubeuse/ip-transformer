@@ -119,9 +119,9 @@ function initWebtoonEpisodeData(episodeNum, script, genImages) {
 
     // Créer les bulles à partir des dialogues
     const bubbles = (scene.dialogue || []).slice(0, 4).map((d, bi) => {
-      // Placement auto : répartir les bulles verticalement
-      const yPercent = 10 + (bi * 22); // espacement vertical
-      const xPercent = bi % 2 === 0 ? 10 : 50; // alternance gauche/droite
+      // Placement auto : bulles en bas de l'image pour ne pas masquer les visages
+      const yPercent = 55 + (bi * 12); // démarrer à 55%, espacement 12%
+      const xPercent = bi % 2 === 0 ? 5 : 50; // alternance gauche/droite
 
       // Couleur par intervenant (mode podcast)
       let color = '#ffffff';
@@ -140,7 +140,7 @@ function initWebtoonEpisodeData(episodeNum, script, genImages) {
         x: xPercent,      // position en % de la largeur
         y: yPercent,       // position en % de la hauteur du panneau
         color,
-        fontSize: 24,
+        fontSize: 16,
       };
     });
 
@@ -424,7 +424,7 @@ function addBubble(episodeNum, panelIdx) {
     x: 10 + (bubbleCount * 20),
     y: 10 + (bubbleCount * 20),
     color: '#ffffff',
-    fontSize: 24,
+    fontSize: 16,
   });
 
   State.save();
