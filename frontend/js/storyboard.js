@@ -1,5 +1,6 @@
-// storyboard.js — Écran 8 : Vue storyboard + preview slideshow + export
-// 3 images en ligne par épisode avec transitions et dialogues
+// storyboard.js — Écran 8 : Storyboard avec images de scène générées
+// Chaque scène obtient une image unique qui mixe personnage + décor
+// Boutons régénérer/supprimer par image, bulles positionnées intelligemment
 
 /** Épisode actuellement affiché dans le storyboard */
 let currentStoryboardEpisode = 1;
@@ -25,10 +26,12 @@ function renderStoryboardTabs() {
 
   tabsEl.innerHTML = (Array.isArray(episodes) ? episodes : []).map((ep, i) => {
     const num = ep.number || i + 1;
+    const hasImages = State.storyboardImages && State.storyboardImages[num];
     return `
-      <button class="episode-tab ${num === currentStoryboardEpisode ? 'episode-tab--active' : ''}"
+      <button class="episode-tab ${num === currentStoryboardEpisode ? 'episode-tab--active' : ''} ${hasImages ? 'episode-tab--done' : ''}"
         onclick="selectStoryboardEpisode(${num})">
         <span class="episode-tab__num">EP ${num}</span>
+        ${hasImages ? '<span class="episode-tab__check">✓</span>' : ''}
       </button>
     `;
   }).join('');
@@ -45,66 +48,325 @@ function selectStoryboardEpisode(episodeNum) {
   stopSlideshow();
 }
 
+// ============================================================
+// GÉNÉRATION D'IMAGES DE SCÈNE
+// ============================================================
+
 /**
- * Affiche le storyboard d'un épisode : 3 images + transitions + dialogues
- * @param {number} episodeNum
+ * Construit un prompt de scène qui mixe personnage + lieu + action
+ * Utilise les vrais champs de ID IP (style, univers, palette, ton)
+ */
+function buildScenePrompt(scene, sceneIndex) {
+  const ctx = getFullStyleContext();
+  const canon = State.idIP || {};
+  const isManga = /manga|anime|manhwa|webtoon/i.test(ctx.stylePrompt || '');
+  const styleKeyword = isManga ? 'manga anime' : (ctx.stylePrompt || 'illustration').split(',')[0].trim();
+
+  // Extraire les personnages mentionnés dans la scène
+  const speakers = (scene.dialogue || []).map(d => d.speaker).filter(Boolean);
+  const charNames = [...new Set(speakers)];
+  const charDescriptions = charNames.map(name => {
+    const char = (canon.characters || []).find(c => c.name && c.name.toLowerCase() === name.toLowerCase());
+    return char ? `${char.name}: ${(char.description || '').substring(0, 80)}` : name;
+  }).join(', ');
+
+  // Trouver le lieu le plus pertinent pour cette scène
+  const sceneText = `${scene.visualDescription || ''} ${scene.title || ''}`.toLowerCase();
+  const matchedLoc = (canon.locations || []).find(loc =>
+    loc.name && sceneText.includes(loc.name.toLowerCase())
+  );
+  const locDesc = matchedLoc
+    ? `setting: ${matchedLoc.name}, ${(matchedLoc.description || '').substring(0, 80)}`
+    : '';
+
+  const parts = [];
+
+  // 1. Style visuel (priorité max)
+  if (isManga) {
+    parts.push('manga art, anime illustration, Japanese manga style, bold ink outlines, cel-shaded, 2D hand-drawn');
+  } else {
+    parts.push(ctx.stylePrompt || 'illustration');
+  }
+
+  // 2. Univers
+  if (ctx.universe) parts.push(ctx.universe.substring(0, 100));
+
+  // 3. Palette
+  if (ctx.palette) parts.push(ctx.palette);
+
+  // 4. Ton
+  if (ctx.tone) parts.push(`mood: ${ctx.tone.substring(0, 60)}`);
+
+  // 5. Description visuelle de la scène (le plus important pour le contenu)
+  if (scene.visualDescription) {
+    parts.push(scene.visualDescription.substring(0, 200));
+  }
+
+  // 6. Personnages dans la scène
+  if (charDescriptions) parts.push(`characters: ${charDescriptions}`);
+
+  // 7. Lieu
+  if (locDesc) parts.push(locDesc);
+
+  // 8. Ambiance de la scène
+  if (scene.mood) parts.push(`atmosphere: ${scene.mood}`);
+
+  // 9. Qualité + renforcement style
+  parts.push(`${styleKeyword} illustration, cinematic composition, high quality`);
+
+  if (isManga) {
+    parts.push('consistent manga anime style, NOT photorealistic, NOT 3D render, NOT photograph');
+  } else {
+    parts.push(`consistent ${styleKeyword}, NOT photorealistic, NOT photo`);
+  }
+
+  return parts.join(', ');
+}
+
+/**
+ * Génère toutes les images de scène pour l'épisode courant
+ */
+async function generateStoryboardImages() {
+  const episodeNum = currentStoryboardEpisode;
+  const script = State.scripts && State.scripts[episodeNum];
+  if (!script || !script.scenes) {
+    alert('Script non trouvé. Retournez à l\'étape Scripts.');
+    return;
+  }
+
+  const scenes = script.scenes;
+  const total = scenes.length;
+
+  if (!State.storyboardImages) State.storyboardImages = {};
+  if (!State.storyboardImages[episodeNum]) State.storyboardImages[episodeNum] = [];
+
+  showLoading('screen-8-loading', 'replicate', {
+    message: `Génération des images de scène EP${episodeNum}`,
+    total,
+    current: 1,
+  });
+
+  for (let i = 0; i < scenes.length; i++) {
+    const scene = scenes[i];
+    const existing = State.storyboardImages[episodeNum][i];
+
+    // Skip si image déjà générée et approuvée
+    if (existing && existing.url && existing.status === 'approved') continue;
+
+    // Délai anti rate-limit (sauf première)
+    if (i > 0) {
+      updateLoadingProgress('screen-8-loading', ((i) / total) * 100, 'Pause anti rate-limit…');
+      await new Promise(r => setTimeout(r, 12000));
+    }
+
+    updateLoadingCounter('screen-8-loading', i + 1, total);
+    updateLoadingProgress('screen-8-loading', (i / total) * 100, `Scène ${i + 1} : ${scene.title || ''}`);
+
+    const prompt = buildScenePrompt(scene, i);
+
+    try {
+      const imageUrl = await replicateGenerateImage({ prompt });
+      State.storyboardImages[episodeNum][i] = {
+        sceneIndex: i,
+        url: imageUrl,
+        prompt,
+        status: 'pending',
+      };
+    } catch (err) {
+      State.storyboardImages[episodeNum][i] = {
+        sceneIndex: i,
+        url: null,
+        prompt,
+        status: 'error',
+        error: err.message,
+      };
+    }
+
+    State.save();
+    displayStoryboard(episodeNum);
+  }
+
+  hideLoading('screen-8-loading');
+  displayStoryboard(episodeNum);
+}
+
+/**
+ * Régénère l'image d'une seule scène
+ */
+async function regenStoryboardScene(episodeNum, sceneIndex) {
+  const script = State.scripts && State.scripts[episodeNum];
+  if (!script || !script.scenes || !script.scenes[sceneIndex]) return;
+
+  if (!State.storyboardImages) State.storyboardImages = {};
+  if (!State.storyboardImages[episodeNum]) State.storyboardImages[episodeNum] = [];
+
+  // Marquer comme en cours
+  State.storyboardImages[episodeNum][sceneIndex] = {
+    sceneIndex,
+    url: null,
+    status: 'generating',
+    prompt: '',
+  };
+  displayStoryboard(episodeNum);
+
+  const scene = script.scenes[sceneIndex];
+  const prompt = buildScenePrompt(scene, sceneIndex);
+
+  try {
+    const imageUrl = await replicateGenerateImage({ prompt });
+    State.storyboardImages[episodeNum][sceneIndex] = {
+      sceneIndex,
+      url: imageUrl,
+      prompt,
+      status: 'pending',
+    };
+  } catch (err) {
+    State.storyboardImages[episodeNum][sceneIndex] = {
+      sceneIndex,
+      url: null,
+      prompt,
+      status: 'error',
+      error: err.message,
+    };
+  }
+
+  State.save();
+  displayStoryboard(episodeNum);
+}
+
+/**
+ * Supprime l'image d'une scène du storyboard
+ */
+function deleteStoryboardScene(episodeNum, sceneIndex) {
+  if (!State.storyboardImages || !State.storyboardImages[episodeNum]) return;
+  State.storyboardImages[episodeNum][sceneIndex] = {
+    sceneIndex,
+    url: null,
+    status: 'empty',
+    prompt: '',
+  };
+  State.save();
+  displayStoryboard(episodeNum);
+}
+
+/**
+ * Approuve l'image d'une scène
+ */
+function approveStoryboardScene(episodeNum, sceneIndex) {
+  if (!State.storyboardImages || !State.storyboardImages[episodeNum]) return;
+  const img = State.storyboardImages[episodeNum][sceneIndex];
+  if (img && img.url) {
+    img.status = 'approved';
+    State.save();
+    displayStoryboard(episodeNum);
+  }
+}
+
+// ============================================================
+// AFFICHAGE DU STORYBOARD
+// ============================================================
+
+/**
+ * Affiche le storyboard d'un épisode avec images de scène + bulles
  */
 function displayStoryboard(episodeNum) {
-  const images = getBankImagesForEpisode(episodeNum);
   const script = State.scripts ? State.scripts[episodeNum] : null;
   const scenes = (script && script.scenes) || [];
+  const storyImages = (State.storyboardImages && State.storyboardImages[episodeNum]) || [];
 
   const container = document.getElementById('storyboard-content');
 
-  if (images.length === 0) {
-    container.innerHTML = '<div class="card"><p class="status--error">Aucune image générée pour cet épisode. Retournez à l\'écran 7.</p></div>';
+  if (scenes.length === 0) {
+    container.innerHTML = '<div class="card"><p class="status--error">Aucun script pour cet épisode. Retournez à l\'étape Scripts.</p></div>';
     return;
   }
 
   container.innerHTML = `
-    <!-- Vue storyboard : 3 images en ligne -->
     <div class="storyboard-strip">
-      ${images.map((img, i) => {
-        const scene = scenes[i] || {};
+      ${scenes.map((scene, i) => {
+        const img = storyImages[i] || {};
         const dialogues = scene.dialogue || [];
+        const hasImage = !!img.url;
+        const isGenerating = img.status === 'generating';
+        const isError = img.status === 'error';
+        const isApproved = img.status === 'approved';
+        const isPending = hasImage && !isApproved && !isError;
+
         return `
           <div class="storyboard-panel" data-index="${i}">
             <div class="storyboard-panel__img-wrap">
-              ${img.url
+              ${hasImage
                 ? `<img src="${img.url}" alt="Scène ${i + 1}" class="storyboard-panel__img">`
-                : '<div class="storyboard-panel__missing">Image manquante</div>'
+                : isGenerating
+                  ? `<div class="storyboard-panel__loading"><div class="loading__spinner"></div><span>Génération…</span></div>`
+                  : isError
+                    ? `<div class="storyboard-panel__error">${img.error || 'Erreur'}</div>`
+                    : `<div class="storyboard-panel__empty">
+                         <span style="font-size:32px;">🎬</span>
+                         <span>Pas encore généré</span>
+                       </div>`
               }
-              <!-- Bulles de dialogue superposées -->
-              ${dialogues.map((d, di) => `
-                <div class="storyboard-bubble" style="bottom:${5 + di * 18}%; ${di % 2 === 0 ? 'left:5%' : 'right:5%'}">
-                  <span class="storyboard-bubble__speaker">${d.speaker}</span>
-                  <span class="storyboard-bubble__text">"${d.text}"</span>
-                </div>
-              `).join('')}
+              <!-- Bulles de dialogue superposées — positionnées en bas, ordonnées -->
+              ${hasImage ? dialogues.map((d, di) => {
+                // Position intelligente : en bas de l'image, alterner gauche/droite
+                // Plus il y a de bulles, plus elles remontent
+                const totalBubbles = dialogues.length;
+                const yBase = 78 - (totalBubbles - 1) * 10; // Remonter si plusieurs bulles
+                const yPos = yBase + di * 12;
+                const xPos = di % 2 === 0 ? 3 : 48;
+                return `
+                  <div class="storyboard-bubble" style="bottom:auto; top:${yPos}%; ${di % 2 === 0 ? `left:${xPos}%` : `right:3%`}">
+                    <span class="storyboard-bubble__speaker">${d.speaker}</span>
+                    <span class="storyboard-bubble__text">"${(d.text || '').substring(0, 60)}${(d.text || '').length > 60 ? '…' : ''}"</span>
+                  </div>
+                `;
+              }).join('') : ''}
             </div>
             <div class="storyboard-panel__info">
               <span class="storyboard-panel__num">Scène ${i + 1}</span>
+              <span class="storyboard-panel__title">${scene.title || ''}</span>
               <span class="storyboard-panel__mood">${scene.mood || ''}</span>
             </div>
-            ${i < images.length - 1 ? '<div class="storyboard-transition">→</div>' : ''}
+            <div class="storyboard-panel__actions">
+              ${isApproved
+                ? `<span class="gen-image-card__badge gen-image-card__badge--approved">✓</span>
+                   <button class="btn btn--small btn--secondary" onclick="regenStoryboardScene(${episodeNum}, ${i})">Régénérer</button>`
+                : isError
+                  ? `<button class="btn btn--small btn--primary" onclick="regenStoryboardScene(${episodeNum}, ${i})">Réessayer</button>`
+                : isPending
+                  ? `<button class="btn btn--small btn--primary" onclick="approveStoryboardScene(${episodeNum}, ${i})">Approuver</button>
+                     <button class="btn btn--small btn--secondary" onclick="regenStoryboardScene(${episodeNum}, ${i})">Régénérer</button>
+                     <button class="btn--icon-delete" onclick="deleteStoryboardScene(${episodeNum}, ${i})" title="Supprimer">✕</button>`
+                : isGenerating
+                  ? ''
+                  : `<button class="btn btn--small btn--primary" onclick="regenStoryboardScene(${episodeNum}, ${i})">Générer</button>`
+              }
+            </div>
+            ${i < scenes.length - 1 ? '<div class="storyboard-transition">→</div>' : ''}
           </div>
         `;
       }).join('')}
     </div>
   `;
 
-  // Activer le bouton Continuer
+  // Activer le bouton Continuer si au moins une image existe
+  const hasAnyImage = storyImages.some(img => img && img.url);
   const btn = document.getElementById('btn-next-screen8');
-  if (btn) btn.disabled = false;
+  if (btn) btn.disabled = !hasAnyImage;
 }
 
+// ============================================================
+// SLIDESHOW
+// ============================================================
+
 /**
- * Lance le slideshow CSS : affiche les images une par une avec transition
+ * Lance le slideshow : affiche les images une par une avec transition
  */
 function startSlideshow() {
-  const images = getBankImagesForEpisode(currentStoryboardEpisode);
+  const storyImages = (State.storyboardImages && State.storyboardImages[currentStoryboardEpisode]) || [];
   const script = State.scripts ? State.scripts[currentStoryboardEpisode] : null;
   const scenes = (script && script.scenes) || [];
+  const images = storyImages.filter(img => img && img.url);
 
   if (images.length === 0) return;
 
@@ -125,78 +387,62 @@ function startSlideshow() {
         <button class="btn btn--secondary btn--small" onclick="slideshowNext()">Suivant →</button>
       </div>
       <div class="slideshow__info">
-        <h4 id="slideshow-title">${scenes[0] ? scenes[0].title : ''}</h4>
-        <p id="slideshow-mood">${scenes[0] ? scenes[0].mood : ''}</p>
+        <h4 id="slideshow-title">${scenes[images[0].sceneIndex] ? scenes[images[0].sceneIndex].title : ''}</h4>
+        <p id="slideshow-mood">${scenes[images[0].sceneIndex] ? scenes[images[0].sceneIndex].mood : ''}</p>
       </div>
     </div>
   `;
 
-  updateSlideshowDialogues(0, scenes);
-
-  // Auto-play toutes les 5 secondes
+  updateSlideshowDialogues(images[0].sceneIndex, scenes);
   slideshowTimer = setInterval(() => slideshowNext(), 5000);
 }
 
-/**
- * Passe à la slide suivante
- */
 function slideshowNext() {
-  const images = getBankImagesForEpisode(currentStoryboardEpisode);
+  const images = ((State.storyboardImages && State.storyboardImages[currentStoryboardEpisode]) || []).filter(img => img && img.url);
   if (images.length === 0) return;
-
   slideshowIndex = (slideshowIndex + 1) % images.length;
   updateSlideshow();
 }
 
-/**
- * Passe à la slide précédente
- */
 function slideshowPrev() {
-  const images = getBankImagesForEpisode(currentStoryboardEpisode);
+  const images = ((State.storyboardImages && State.storyboardImages[currentStoryboardEpisode]) || []).filter(img => img && img.url);
   if (images.length === 0) return;
-
   slideshowIndex = (slideshowIndex - 1 + images.length) % images.length;
   updateSlideshow();
 }
 
-/**
- * Met à jour l'affichage du slideshow
- */
 function updateSlideshow() {
-  const images = getBankImagesForEpisode(currentStoryboardEpisode);
+  const images = ((State.storyboardImages && State.storyboardImages[currentStoryboardEpisode]) || []).filter(img => img && img.url);
   const script = State.scripts ? State.scripts[currentStoryboardEpisode] : null;
   const scenes = (script && script.scenes) || [];
 
+  const currentImg = images[slideshowIndex];
   const img = document.getElementById('slideshow-img');
   const counter = document.getElementById('slideshow-counter');
   const title = document.getElementById('slideshow-title');
   const mood = document.getElementById('slideshow-mood');
 
-  if (img && images[slideshowIndex]) {
+  if (img && currentImg) {
     img.style.opacity = '0';
     setTimeout(() => {
-      img.src = images[slideshowIndex].url || '';
+      img.src = currentImg.url || '';
       img.style.opacity = '1';
     }, 200);
   }
 
   if (counter) counter.textContent = `${slideshowIndex + 1} / ${images.length}`;
-  if (title && scenes[slideshowIndex]) title.textContent = scenes[slideshowIndex].title || '';
-  if (mood && scenes[slideshowIndex]) mood.textContent = scenes[slideshowIndex].mood || '';
+  const scene = scenes[currentImg.sceneIndex] || {};
+  if (title) title.textContent = scene.title || '';
+  if (mood) mood.textContent = scene.mood || '';
 
-  updateSlideshowDialogues(slideshowIndex, scenes);
+  updateSlideshowDialogues(currentImg.sceneIndex, scenes);
 }
 
-/**
- * Met à jour les dialogues du slideshow
- * @param {number} index — index de la scène
- * @param {Array} scenes — scènes du script
- */
-function updateSlideshowDialogues(index, scenes) {
+function updateSlideshowDialogues(sceneIndex, scenes) {
   const container = document.getElementById('slideshow-dialogues');
-  if (!container || !scenes[index]) return;
+  if (!container || !scenes[sceneIndex]) return;
 
-  const dialogues = scenes[index].dialogue || [];
+  const dialogues = scenes[sceneIndex].dialogue || [];
   container.innerHTML = dialogues.map(d => `
     <div class="slideshow__dialogue-line">
       <span class="slideshow__dialogue-speaker">${d.speaker}</span>
@@ -205,9 +451,6 @@ function updateSlideshowDialogues(index, scenes) {
   `).join('');
 }
 
-/**
- * Arrête le slideshow
- */
 function stopSlideshow() {
   if (slideshowTimer) {
     clearInterval(slideshowTimer);
@@ -217,12 +460,13 @@ function stopSlideshow() {
   if (overlay) overlay.style.display = 'none';
 }
 
-/**
- * Exporte le storyboard en HTML autonome
- */
+// ============================================================
+// EXPORT HTML
+// ============================================================
+
 function exportStoryboardHTML() {
   const episodeNum = currentStoryboardEpisode;
-  const images = getBankImagesForEpisode(episodeNum);
+  const storyImages = (State.storyboardImages && State.storyboardImages[episodeNum]) || [];
   const script = State.scripts ? State.scripts[episodeNum] : null;
   const scenes = (script && script.scenes) || [];
   const episode = (State.episodes || [])[episodeNum - 1] || {};
@@ -250,8 +494,8 @@ function exportStoryboardHTML() {
 <body>
   <h1>EP ${episodeNum} — ${episode.title || ''}</h1>
   <div class="strip">
-    ${images.map((img, i) => {
-      const scene = scenes[i] || {};
+    ${scenes.map((scene, i) => {
+      const img = storyImages[i] || {};
       const dialogues = scene.dialogue || [];
       return `
         <div class="panel">
@@ -277,7 +521,6 @@ function exportStoryboardHTML() {
 </body>
 </html>`;
 
-  // Télécharger le fichier HTML
   const blob = new Blob([html], { type: 'text/html' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');

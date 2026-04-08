@@ -38,6 +38,9 @@ const State = {
   imageBank: null,        // { characters: [...], locations: [...] }
   generatedImages: null,  // Legacy — kept for compatibility
 
+  // Écran 8 — Storyboard (images de scène mixant personnage + lieu)
+  storyboardImages: null, // { [episodeNum]: [{ sceneIndex, url, prompt, status }] }
+
   // Écran 9 — Config animation
   animationConfig: null,  // { [episodeNum]: { [sceneNum]: { type, kbDirection } } }
   selectedMusic: null,    // id de la track musicale choisie
@@ -103,6 +106,7 @@ const State = {
     this.generatedImages = null;
     this.animationConfig = null;
     this.selectedMusic = null;
+    this.storyboardImages = null;
     this.generatedClips = null;
     this.webtoonData = null;
     this.webtoonGutter = 30;

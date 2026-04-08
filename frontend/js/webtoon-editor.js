@@ -80,8 +80,11 @@ function loadWebtoonEditor(episodeNum) {
   if (!editor) return;
 
   const script = State.scripts && State.scripts[episodeNum];
-  // Construire les images depuis la banque d'images
-  const genImages = getBankImagesForEpisode(episodeNum);
+  // Utiliser les images du storyboard (scènes mixtes) en priorité, sinon banque
+  const storyImages = (State.storyboardImages && State.storyboardImages[episodeNum]) || [];
+  const genImages = storyImages.filter(img => img && img.url).length > 0
+    ? storyImages.filter(img => img && img.url)
+    : getBankImagesForEpisode(episodeNum);
 
   if (!script || !script.scenes) {
     editor.innerHTML = '<div class="card"><p class="status--error">Script de l\'épisode non trouvé.</p></div>';

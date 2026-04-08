@@ -6,6 +6,15 @@
 let currentVideoEpisode = 1;
 
 /**
+ * Récupère les images pour un épisode — storyboard d'abord, sinon banque
+ */
+function getImagesForEpisode(episodeNum) {
+  const storyImages = (State.storyboardImages && State.storyboardImages[episodeNum]) || [];
+  const filtered = storyImages.filter(img => img && img.url);
+  return filtered.length > 0 ? filtered : getBankImagesForEpisode(episodeNum);
+}
+
+/**
  * Initialise l'écran 10 — génération de clips vidéo
  */
 function initScreen10() {
@@ -183,7 +192,7 @@ async function generateWanClip(ep, sceneNum) {
 
   // Récupérer l'image de référence depuis la banque d'images
   let imageRef = null;
-  const genImages = getBankImagesForEpisode(ep);
+  const genImages = getImagesForEpisode(ep);
   if (genImages) {
     const img = genImages.find(g => g.sceneIndex === sceneNum - 1);
     if (img && img.url) {
@@ -250,7 +259,7 @@ async function generateKenBurnsClip(ep, sceneNum) {
 
   // Récupérer l'image source (générée à l'écran 7)
   let imageUrl = null;
-  const genImages = getBankImagesForEpisode(ep);
+  const genImages = getImagesForEpisode(ep);
   if (genImages) {
     const img = genImages.find(g => g.sceneIndex === sceneNum - 1);
     if (img) imageUrl = img.url;

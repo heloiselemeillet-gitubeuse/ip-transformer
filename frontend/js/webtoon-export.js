@@ -104,8 +104,9 @@ async function renderWebtoonToCanvas(data, episodeNum) {
       }
     }
 
-    // Dessiner les bulles
-    for (const bubble of panel.bubbles) {
+    // Dessiner les bulles — triées par position Y (haut → bas) pour suivre l'histoire
+    const sortedBubbles = [...panel.bubbles].sort((a, b) => a.y - b.y);
+    for (const bubble of sortedBubbles) {
       drawBubble(ctx, bubble, yOffset, WIDTH, panelHeight);
     }
 

@@ -497,16 +497,20 @@
       <div class="screen__content">
 
         <h2 class="screen__title">Storyboard</h2>
-        <p class="screen__desc">Prévisualisez vos épisodes avec les images, transitions et dialogues.</p>
+        <p class="screen__desc">Générez une image par scène qui mixe personnage et décor, puis ajustez les bulles.</p>
 
         <!-- Onglets épisodes -->
         <div class="episode-tabs" id="storyboard-tabs"></div>
+
+        <!-- Zone de chargement -->
+        <div id="screen-8-loading"></div>
 
         <!-- Contenu storyboard -->
         <div id="storyboard-content"></div>
 
         <!-- Actions -->
         <div class="action-row">
+          <button class="btn btn--primary" id="btn-gen-storyboard" onclick="generateStoryboardImages()">Générer les images de scène</button>
           <button class="btn btn--secondary" onclick="startSlideshow()">Slideshow</button>
           <button class="btn btn--secondary" onclick="exportStoryboardHTML()">Exporter HTML</button>
         </div>
