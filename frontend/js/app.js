@@ -640,46 +640,46 @@ function displayAnalysis(analysis) {
     if (podcastEl) podcastEl.style.display = 'block';
     if (peintureEl) peintureEl.style.display = 'none';
 
-    // Intervenants
+    // Intervenants — éditables
     const speakersEl = document.getElementById('analysis-speakers');
     if (speakersEl) speakersEl.innerHTML = (analysis.speakers || []).map((s, i) => `
       <div class="analysis-item analysis-item--selectable">
         <label class="checkbox-label">
           <input type="checkbox" class="analysis-checkbox" data-type="speaker" data-index="${i}" checked>
           <span class="analysis-item__badge" style="background:${s.color || 'var(--accent-primary)'}"></span>
-          <div>
-            <strong>${s.name}</strong>
-            <span class="analysis-item__detail">${s.role || ''}</span>
-          </div>
         </label>
+        <div style="flex:1;">
+          <input class="input input--inline" value="${(s.name || '').replace(/"/g, '&quot;')}" onchange="updateAnalysisField('speakers', ${i}, 'name', this.value)" style="font-weight:700;">
+          <input class="input input--inline" value="${(s.role || '').replace(/"/g, '&quot;')}" onchange="updateAnalysisField('speakers', ${i}, 'role', this.value)" placeholder="Rôle" style="font-size:13px; color:var(--text-secondary);">
+        </div>
       </div>
     `).join('');
 
-    // Faits
+    // Faits — éditables
     const factsEl = document.getElementById('analysis-facts');
     if (factsEl) factsEl.innerHTML = (analysis.facts || []).map((f, i) => `
       <div class="analysis-item analysis-item--selectable">
         <label class="checkbox-label">
           <input type="checkbox" class="analysis-checkbox" data-type="fact" data-index="${i}" checked>
-          <div>
-            <strong>${f.title}</strong>
-            <p class="analysis-item__detail">${f.description}</p>
-          </div>
         </label>
+        <div style="flex:1;">
+          <input class="input input--inline" value="${(f.title || '').replace(/"/g, '&quot;')}" onchange="updateAnalysisField('facts', ${i}, 'title', this.value)" style="font-weight:700;">
+          <textarea class="textarea textarea--small" rows="2" onchange="updateAnalysisField('facts', ${i}, 'description', this.value)">${f.description || ''}</textarea>
+        </div>
       </div>
     `).join('');
 
-    // Citations
+    // Citations — éditables
     const quotesEl = document.getElementById('analysis-quotes');
     if (quotesEl) quotesEl.innerHTML = (analysis.quotes || []).map((q, i) => `
       <div class="analysis-item analysis-item--selectable">
         <label class="checkbox-label">
           <input type="checkbox" class="analysis-checkbox" data-type="quote" data-index="${i}" checked>
-          <blockquote class="quote-block" style="margin:0;flex:1;">
-            <p class="quote-block__text">"${q.text}"</p>
-            <cite class="quote-block__author">— ${q.speaker}</cite>
-          </blockquote>
         </label>
+        <div style="flex:1;">
+          <textarea class="textarea textarea--small" rows="2" onchange="updateAnalysisField('quotes', ${i}, 'text', this.value)">${q.text || ''}</textarea>
+          <input class="input input--inline" value="${(q.speaker || '').replace(/"/g, '&quot;')}" onchange="updateAnalysisField('quotes', ${i}, 'speaker', this.value)" placeholder="Auteur" style="font-size:13px;">
+        </div>
       </div>
     `).join('');
 
@@ -687,27 +687,30 @@ function displayAnalysis(analysis) {
     if (podcastEl) podcastEl.style.display = 'none';
     if (peintureEl) peintureEl.style.display = 'block';
 
-    // Univers visuel
-    document.getElementById('analysis-visual').innerHTML = `<p>${analysis.visual || ''}</p>`;
+    // Univers visuel — éditable
+    document.getElementById('analysis-visual').innerHTML = `
+      <textarea class="textarea" rows="3" onchange="updateAnalysisPeinture('visual', this.value)">${analysis.visual || ''}</textarea>`;
 
     // Palette
     const paletteEl = document.getElementById('analysis-palette');
-    paletteEl.innerHTML = (analysis.palette || []).map(p => `
-      <div class="palette-swatch">
+    paletteEl.innerHTML = (analysis.palette || []).map((p, i) => `
+      <div class="palette-swatch" style="display:flex;align-items:center;gap:8px;">
         <div class="palette-swatch__color" style="background:${p.color}"></div>
-        <span class="palette-swatch__name">${p.name}</span>
+        <input class="input input--inline" value="${(p.name || '').replace(/"/g, '&quot;')}" onchange="updateAnalysisPaletteItem(${i}, 'name', this.value)" style="width:100px;">
+        <input class="input input--inline" value="${(p.color || '').replace(/"/g, '&quot;')}" onchange="updateAnalysisPaletteColor(${i}, this.value)" style="width:80px; font-size:12px;">
       </div>
     `).join('');
 
-    // Ambiance
-    document.getElementById('analysis-mood').innerHTML = `<p style="margin-top:16px">${analysis.mood || ''}</p>`;
+    // Ambiance — éditable
+    document.getElementById('analysis-mood').innerHTML = `
+      <textarea class="textarea" rows="2" onchange="updateAnalysisPeinture('mood', this.value)" style="margin-top:16px">${analysis.mood || ''}</textarea>`;
 
-    // Éléments récurrents
+    // Éléments récurrents — éditables
     const elementsEl = document.getElementById('analysis-elements');
-    elementsEl.innerHTML = (analysis.elements || []).map(e => `
+    elementsEl.innerHTML = (analysis.elements || []).map((e, i) => `
       <div class="analysis-item">
-        <strong>${e.name}</strong>
-        <p class="analysis-item__detail">${e.description}</p>
+        <input class="input input--inline" value="${(e.name || '').replace(/"/g, '&quot;')}" onchange="updateAnalysisElement(${i}, 'name', this.value)" style="font-weight:700;">
+        <textarea class="textarea textarea--small" rows="2" onchange="updateAnalysisElement(${i}, 'description', this.value)">${e.description || ''}</textarea>
       </div>
     `).join('');
   }
@@ -715,6 +718,54 @@ function displayAnalysis(analysis) {
   // Activer le bouton Continuer
   const btnNext2 = document.getElementById('btn-next-screen2');
   if (btnNext2) btnNext2.disabled = false;
+}
+
+/**
+ * Met à jour un champ de l'analyse (mode podcast)
+ */
+function updateAnalysisField(arrayName, index, field, value) {
+  if (!State.analysis || !State.analysis[arrayName] || !State.analysis[arrayName][index]) return;
+  State.analysis[arrayName][index][field] = value;
+  State.save();
+}
+
+/**
+ * Met à jour un champ simple de l'analyse (mode peinture)
+ */
+function updateAnalysisPeinture(field, value) {
+  if (!State.analysis) return;
+  State.analysis[field] = value;
+  State.save();
+}
+
+/**
+ * Met à jour un item de palette (mode peinture)
+ */
+function updateAnalysisPaletteItem(index, field, value) {
+  if (!State.analysis || !State.analysis.palette || !State.analysis.palette[index]) return;
+  State.analysis.palette[index][field] = value;
+  State.save();
+}
+
+/**
+ * Met à jour la couleur d'une palette et rafraîchit la preview
+ */
+function updateAnalysisPaletteColor(index, value) {
+  if (!State.analysis || !State.analysis.palette || !State.analysis.palette[index]) return;
+  State.analysis.palette[index].color = value;
+  State.save();
+  // Rafraîchir la couleur du swatch
+  const swatches = document.querySelectorAll('.palette-swatch__color');
+  if (swatches[index]) swatches[index].style.background = value;
+}
+
+/**
+ * Met à jour un élément récurrent (mode peinture)
+ */
+function updateAnalysisElement(index, field, value) {
+  if (!State.analysis || !State.analysis.elements || !State.analysis.elements[index]) return;
+  State.analysis.elements[index][field] = value;
+  State.save();
 }
 
 /**
