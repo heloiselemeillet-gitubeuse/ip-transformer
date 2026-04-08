@@ -862,14 +862,18 @@ function displayCanon(canon) {
       </div>
       <div class="canon-character__body">
         <textarea class="textarea textarea--small canon-char-desc" rows="3" data-index="${i}">${c.description || ''}</textarea>
-        <div class="canon-character__ref">
-          <label class="upload-zone upload-zone--mini" id="char-ref-zone-${i}">
-            <input type="file" accept="image/*" onchange="handleCharRefUpload(event, ${i})" hidden>
-            <div class="upload-zone__content">
-              <span class="upload-zone__text">Photo de référence</span>
+        <div class="canon-character__refs-row">
+          ${[0, 1, 2].map(slot => `
+            <div class="canon-character__ref">
+              <label class="upload-zone upload-zone--mini" id="char-ref-zone-${i}-${slot}">
+                <input type="file" accept="image/*" onchange="handleCharRefUpload(event, ${i}, ${slot})" hidden>
+                <div class="upload-zone__content">
+                  <span class="upload-zone__text">📷 ${slot + 1}</span>
+                </div>
+              </label>
+              <div class="canon-character__ref-preview" id="char-ref-preview-${i}-${slot}"></div>
             </div>
-          </label>
-          <div class="canon-character__ref-preview" id="char-ref-preview-${i}"></div>
+          `).join('')}
         </div>
       </div>
     </div>
@@ -911,8 +915,9 @@ function displayCanon(canon) {
  * Upload d'une photo de référence pour un personnage
  * @param {Event} event — événement change
  * @param {number} charIndex — index du personnage
+ * @param {number} slot — sous-index (0, 1, 2) pour multi-photo
  */
-async function handleCharRefUpload(event, charIndex) {
+async function handleCharRefUpload(event, charIndex, slot = 0) {
   const file = event.target.files[0];
   if (!file) return;
 
@@ -920,17 +925,27 @@ async function handleCharRefUpload(event, charIndex) {
   const blob = new Blob([arrayBuffer], { type: file.type });
   const url = URL.createObjectURL(blob);
 
-  // Sauvegarder dans IndexedDB
+  // Sauvegarder dans IndexedDB avec sous-index
   await dbSave(STORES.CHARACTER_REFS, {
-    charIndex,
+    charIndex: `${charIndex}-${slot}`,
     name: file.name,
     type: file.type,
     data: arrayBuffer,
   });
 
+  // Compat : sauvegarder aussi l'index simple pour le slot 0
+  if (slot === 0) {
+    await dbSave(STORES.CHARACTER_REFS, {
+      charIndex,
+      name: file.name,
+      type: file.type,
+      data: arrayBuffer,
+    });
+  }
+
   // Afficher la prévisualisation
-  const previewEl = document.getElementById(`char-ref-preview-${charIndex}`);
-  previewEl.innerHTML = `<img src="${url}" alt="Référence ${charIndex}" class="canon-ref-img">`;
+  const previewEl = document.getElementById(`char-ref-preview-${charIndex}-${slot}`);
+  if (previewEl) previewEl.innerHTML = `<img src="${url}" alt="Référence ${charIndex}-${slot}" class="canon-ref-img">`;
 }
 
 /**
@@ -941,6 +956,7 @@ async function loadCharacterRefs() {
   for (const ref of refs) {
     const blob = new Blob([ref.data], { type: ref.type });
     const url = URL.createObjectURL(blob);
+    // Essayer le format multi-slot d'abord (ex: "0-1"), puis compat simple
     const previewEl = document.getElementById(`char-ref-preview-${ref.charIndex}`);
     if (previewEl) {
       previewEl.innerHTML = `<img src="${url}" alt="Référence" class="canon-ref-img">`;
@@ -980,14 +996,18 @@ function displayLocations(locations) {
       <div class="canon-character__body">
         <textarea class="textarea textarea--small canon-loc-desc" rows="2" data-loc-index="${i}"
           placeholder="Description du lieu, ambiance, couleurs…">${loc.description || ''}</textarea>
-        <div class="canon-character__ref">
-          <label class="upload-zone upload-zone--mini" id="loc-ref-zone-${i}">
-            <input type="file" accept="image/*" onchange="handleLocRefUpload(event, ${i})" hidden>
-            <div class="upload-zone__content">
-              <span class="upload-zone__text">Photo de référence</span>
+        <div class="canon-character__refs-row">
+          ${[0, 1, 2].map(slot => `
+            <div class="canon-character__ref">
+              <label class="upload-zone upload-zone--mini" id="loc-ref-zone-${i}-${slot}">
+                <input type="file" accept="image/*" onchange="handleLocRefUpload(event, ${i}, ${slot})" hidden>
+                <div class="upload-zone__content">
+                  <span class="upload-zone__text">📷 ${slot + 1}</span>
+                </div>
+              </label>
+              <div class="canon-character__ref-preview" id="loc-ref-preview-${i}-${slot}"></div>
             </div>
-          </label>
-          <div class="canon-character__ref-preview" id="loc-ref-preview-${i}"></div>
+          `).join('')}
         </div>
       </div>
     </div>
@@ -1009,8 +1029,11 @@ function addLocation() {
 
 /**
  * Upload d'une photo de référence pour un lieu
+ * @param {Event} event — événement change
+ * @param {number} locIndex — index du lieu
+ * @param {number} slot — sous-index (0, 1, 2) pour multi-photo
  */
-async function handleLocRefUpload(event, locIndex) {
+async function handleLocRefUpload(event, locIndex, slot = 0) {
   const file = event.target.files[0];
   if (!file) return;
 
@@ -1018,15 +1041,26 @@ async function handleLocRefUpload(event, locIndex) {
   const blob = new Blob([arrayBuffer], { type: file.type });
   const url = URL.createObjectURL(blob);
 
+  // Sauvegarder avec sous-index
   await dbSave(STORES.CHARACTER_REFS, {
-    charIndex: `loc-${locIndex}`,
+    charIndex: `loc-${locIndex}-${slot}`,
     name: file.name,
     type: file.type,
     data: arrayBuffer,
   });
 
-  const previewEl = document.getElementById(`loc-ref-preview-${locIndex}`);
-  if (previewEl) previewEl.innerHTML = `<img src="${url}" alt="Lieu ${locIndex}" class="canon-ref-img">`;
+  // Compat : sauvegarder aussi l'index simple pour le slot 0
+  if (slot === 0) {
+    await dbSave(STORES.CHARACTER_REFS, {
+      charIndex: `loc-${locIndex}`,
+      name: file.name,
+      type: file.type,
+      data: arrayBuffer,
+    });
+  }
+
+  const previewEl = document.getElementById(`loc-ref-preview-${locIndex}-${slot}`);
+  if (previewEl) previewEl.innerHTML = `<img src="${url}" alt="Lieu ${locIndex}-${slot}" class="canon-ref-img">`;
 }
 
 /**
@@ -1036,10 +1070,11 @@ async function loadLocationRefs() {
   const refs = await dbGetAll(STORES.CHARACTER_REFS);
   for (const ref of refs) {
     if (typeof ref.charIndex === 'string' && ref.charIndex.startsWith('loc-')) {
-      const locIndex = ref.charIndex.replace('loc-', '');
       const blob = new Blob([ref.data], { type: ref.type });
       const url = URL.createObjectURL(blob);
-      const previewEl = document.getElementById(`loc-ref-preview-${locIndex}`);
+      // Format multi-slot: "loc-0-1" → preview id "loc-ref-preview-0-1"
+      const suffix = ref.charIndex.replace('loc-', '');
+      const previewEl = document.getElementById(`loc-ref-preview-${suffix}`);
       if (previewEl) previewEl.innerHTML = `<img src="${url}" alt="Lieu" class="canon-ref-img">`;
     }
   }

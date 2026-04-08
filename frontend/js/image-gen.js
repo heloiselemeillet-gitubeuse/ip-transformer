@@ -186,9 +186,11 @@ async function generateImageBank() {
     updateLoadingCounter('screen-7-loading', imageCount, totalImages);
     updateLoadingProgress('screen-7-loading', ((imageCount - 1) / totalImages) * 100, `Personnage : ${char.name || 'Sans nom'}`);
 
-    // Chercher la photo de ref pour ce personnage
+    // Chercher la photo de ref pour ce personnage (slot 0 uniquement en batch)
     let imageRef = null;
-    const charRef = allRefs.find(r => r.charIndex === i);
+    const charRefMulti = allRefs.find(r => r.charIndex === `${i}-0`);
+    const charRefSimple = allRefs.find(r => r.charIndex === i);
+    const charRef = charRefMulti || charRefSimple;
     if (charRef) {
       const blob = new Blob([charRef.data], { type: charRef.type });
       imageRef = await blobToBase64(blob);
@@ -250,12 +252,25 @@ async function generateImageBank() {
       updateLoadingCounter('screen-7-loading', imageCount, totalImages);
       updateLoadingProgress('screen-7-loading', ((imageCount - 1) / totalImages) * 100, `Lieu : ${loc.name || 'Sans nom'} (vue ${variant + 1})`);
 
-      // Chercher la photo de ref pour ce lieu
+      // Chercher la photo de ref — seulement pour variant 0 (inspiration)
+      // Variants 1+ utilisent le texte seul pour plus de diversité
       let imageRef = null;
-      const locRef = allRefs.find(r => r.charIndex === `loc-${i}`);
-      if (locRef) {
-        const blob = new Blob([locRef.data], { type: locRef.type });
-        imageRef = await blobToBase64(blob);
+      if (variant === 0) {
+        const locRefMulti = allRefs.find(r => r.charIndex === `loc-${i}-0`);
+        const locRefSimple = allRefs.find(r => r.charIndex === `loc-${i}`);
+        const locRef = locRefMulti || locRefSimple;
+        if (locRef) {
+          const blob = new Blob([locRef.data], { type: locRef.type });
+          imageRef = await blobToBase64(blob);
+        }
+      } else {
+        // Chercher une ref multi-photo spécifique à ce variant
+        const locRefVariant = allRefs.find(r => r.charIndex === `loc-${i}-${variant}`);
+        if (locRefVariant) {
+          const blob = new Blob([locRefVariant.data], { type: locRefVariant.type });
+          imageRef = await blobToBase64(blob);
+        }
+        // Sinon : pas de ref → flux-schnell text-only → plus de diversité
       }
 
       const prompt = buildBankPrompt({
@@ -338,13 +353,20 @@ function buildBankPrompt({ style, palette, subject, description, type, tone, uni
   // Le style est LE cadre dominant — il enveloppe tout le prompt
   const styleTag = style || 'illustration';
 
+  // Détecter si le style est manga/anime pour renforcement spécial
+  const isManga = /manga|anime|manhwa|webtoon/i.test(styleTag);
+
   // Extraire un mot-clé court du style pour le renforcement
-  const styleKeyword = styleTag.split(',')[0].trim(); // ex: "manga manhwa style"
+  const styleKeyword = isManga ? 'manga anime' : styleTag.split(',')[0].trim();
 
   const parts = [];
 
-  // DÉBUT : style dominant (2x pour le renforcer)
-  parts.push(styleTag);
+  // DÉBUT : style dominant en premier (le plus important pour le modèle)
+  if (isManga) {
+    parts.push('manga art, anime illustration, Japanese manga style, bold ink outlines, cel-shaded');
+  } else {
+    parts.push(styleTag);
+  }
 
   // Sujet
   parts.push(subject);
@@ -356,17 +378,25 @@ function buildBankPrompt({ style, palette, subject, description, type, tone, uni
   if (palette) parts.push(palette);
 
   // MILIEU : rappel du style
-  parts.push(`rendered in ${styleKeyword}`);
+  if (isManga) {
+    parts.push('drawn in manga style, 2D illustration, flat colors, expressive anime eyes');
+  } else {
+    parts.push(`rendered in ${styleKeyword}`);
+  }
 
-  // Qualité adaptée au style (PAS de "realistic" si style manga)
+  // Qualité adaptée au type
   if (type === 'character') {
     parts.push(`${styleKeyword} character design, high quality, detailed`);
   } else {
     parts.push(`${styleKeyword} environment, detailed background, high quality`);
   }
 
-  // FIN : dernier rappel du style pour que le modèle ne dérive pas
-  parts.push(`consistent ${styleKeyword}, NOT photorealistic, NOT photo`);
+  // FIN : renforcement final + anti-photo
+  if (isManga) {
+    parts.push('consistent manga anime style, hand-drawn 2D look, NOT photorealistic, NOT 3D render, NOT photograph');
+  } else {
+    parts.push(`consistent ${styleKeyword}, NOT photorealistic, NOT photo`);
+  }
 
   return parts.join(', ');
 }
@@ -553,17 +583,26 @@ async function generateBankSingle(type, index) {
   arr[index] = { ...item, url: null, status: 'generating', error: '' };
   displayImageBank();
 
-  // Récupérer la ref photo
+  // Récupérer la ref photo — SEULEMENT pour la variante 0 (inspiration)
+  // Les autres variantes utilisent le texte seul pour plus de diversité
   let imageRef = null;
+  const variant = item.variant || 0;
   const allRefs = await dbGetAll(STORES.CHARACTER_REFS);
+
   if (type === 'char') {
-    const charRef = allRefs.find(r => r.charIndex === item.charIndex);
+    // Chercher ref par sous-index (multi-photo) ou index simple (compat)
+    const charRefMulti = allRefs.find(r => r.charIndex === `${item.charIndex}-${variant}`);
+    const charRefSingle = allRefs.find(r => r.charIndex === item.charIndex);
+    const charRef = charRefMulti || (variant === 0 ? charRefSingle : null);
     if (charRef) {
       const blob = new Blob([charRef.data], { type: charRef.type });
       imageRef = await blobToBase64(blob);
     }
   } else {
-    const locRef = allRefs.find(r => r.charIndex === `loc-${item.locIndex}`);
+    // Chercher ref par sous-index (multi-photo) ou index simple (compat)
+    const locRefMulti = allRefs.find(r => r.charIndex === `loc-${item.locIndex}-${variant}`);
+    const locRefSingle = allRefs.find(r => r.charIndex === `loc-${item.locIndex}`);
+    const locRef = locRefMulti || (variant === 0 ? locRefSingle : null);
     if (locRef) {
       const blob = new Blob([locRef.data], { type: locRef.type });
       imageRef = await blobToBase64(blob);

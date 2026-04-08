@@ -6,7 +6,7 @@
  */
 const VISUAL_STYLES = {
   podcast: [
-    { id: 'manga', label: 'Manga / Manhwa', icon: '⚡', desc: 'Grands yeux, dynamisme, expressions codifiées, style webtoon coréen', prompt: 'manga manhwa style, cel-shaded, vibrant colors, dynamic composition, expressive characters, korean webtoon aesthetic' },
+    { id: 'manga', label: 'Manga / Manhwa', icon: '⚡', desc: 'Grands yeux, dynamisme, expressions codifiées, style webtoon coréen', prompt: 'manga art, Japanese manga illustration, anime cel-shaded style, bold ink outlines, large expressive eyes, 2D hand-drawn, manhwa webtoon aesthetic, vibrant flat colors, dynamic composition' },
     { id: 'semi-realistic', label: 'Semi-réaliste', icon: '📷', desc: 'Proportions proches du réel, détails soignés, éclairage cinématique', prompt: 'semi-realistic illustration, detailed proportions, cinematic lighting, polished details, digital painting' },
     { id: 'cartoon', label: 'Cartoon / Stylisé', icon: '🎨', desc: 'Formes simplifiées, expressivité exagérée, style ludique', prompt: 'cartoon style, bold outlines, flat colors, exaggerated expressions, playful, stylized' },
     { id: 'flat-design', label: 'Flat design illustré', icon: '🖌️', desc: 'Aplats de couleur, minimalisme graphique, moderne', prompt: 'flat design illustration, solid colors, minimalist graphic style, modern, clean shapes' },
@@ -16,7 +16,7 @@ const VISUAL_STYLES = {
   ],
   peinture: [
     { id: 'faithful', label: 'Fidèle à l\'artiste', icon: '🖼️', desc: 'Technique et palette fidèles à l\'original', prompt: 'faithful to the original art style, same technique and palette' },
-    { id: 'manga', label: 'Manga / Manhwa', icon: '⚡', desc: 'Adaptation manga, dynamisme, style webtoon', prompt: 'manga manhwa style, cel-shaded, dynamic composition, korean webtoon aesthetic' },
+    { id: 'manga', label: 'Manga / Manhwa', icon: '⚡', desc: 'Adaptation manga, dynamisme, style webtoon', prompt: 'manga art, Japanese manga illustration, anime cel-shaded style, bold ink outlines, large expressive eyes, 2D hand-drawn, manhwa webtoon aesthetic, vibrant flat colors, dynamic composition' },
     { id: 'semi-realistic', label: 'Semi-réaliste', icon: '📷', desc: 'Réalisme pictural, détaillé, artistique', prompt: 'semi-realistic illustration, painterly, detailed, artistic' },
     { id: 'flat-design', label: 'Flat design', icon: '🖌️', desc: 'Aplats de couleur, minimalisme, moderne', prompt: 'flat design illustration, solid colors, minimalist, modern' },
     { id: 'expressionist', label: 'Expressionniste', icon: '🔥', desc: 'Coups de pinceau marqués, émotionnel, dramatique', prompt: 'expressionist style, bold brushstrokes, emotional, dramatic' },
