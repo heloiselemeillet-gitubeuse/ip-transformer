@@ -49,7 +49,8 @@ body {
 .stepper {
   display: flex;
   align-items: center;
-  padding: 0;
+  padding: 10px 12px;
+  gap: 2px;
   background: var(--bg-main);
   border-bottom: 1px solid var(--border);
   position: sticky;
@@ -63,48 +64,7 @@ body {
   display: none;
 }
 
-/* Phases visuelles */
-.stepper__phase {
-  display: flex;
-  align-items: center;
-  padding: 12px 0;
-  gap: 2px;
-  flex-shrink: 0;
-}
-
-.stepper__phase-label {
-  font-size: 10px;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  color: var(--text-secondary);
-  padding: 4px 14px;
-  border-bottom: 2px solid transparent;
-  white-space: nowrap;
-}
-
-.stepper__phase--extraction .stepper__phase-label {
-  color: var(--accent-primary);
-  border-bottom-color: var(--accent-primary);
-}
-
-.stepper__phase--visuels .stepper__phase-label {
-  color: var(--accent-secondary);
-  border-bottom-color: var(--accent-secondary);
-}
-
-.stepper__phase--production .stepper__phase-label {
-  color: var(--accent-violet);
-  border-bottom-color: var(--accent-violet);
-}
-
-.stepper__phase-divider {
-  width: 1px;
-  height: 32px;
-  background: var(--border);
-  margin: 0 8px;
-  flex-shrink: 0;
-}
+/* Stepper : liste plate d'étapes */
 
 .stepper__step {
   display: flex;

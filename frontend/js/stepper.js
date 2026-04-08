@@ -1,5 +1,5 @@
 // stepper.js — Composant stepper Neo Pop Tech Human
-// Desktop : phases (Extraction | Visuels | Production) avec étapes groupées
+// Desktop : liste plate d'étapes numérotées avec connecteurs
 // Mobile (<768px) : compact "Étape 3/13 — ID IP" + barre de progression
 
 /** Référence vers les conteneurs du stepper */
@@ -13,30 +13,7 @@ let stepperAppState = null;
 /** Index max atteint — permet la navigation libre vers toute étape déjà visitée */
 let stepperMaxVisited = 0;
 
-/**
- * Définition des 3 phases visuelles
- * Chaque phase regroupe des écrans par leur id
- */
-const STEPPER_PHASES = [
-  {
-    key: 'extraction',
-    label: 'EXTRACTION',
-    cssClass: 'stepper__phase--extraction',
-    screenIds: ['screen-0', 'screen-1', 'screen-2', 'screen-3b'],
-  },
-  {
-    key: 'production',
-    label: 'PRODUCTION',
-    cssClass: 'stepper__phase--visuels',
-    screenIds: ['screen-4', 'screen-5'],
-  },
-  {
-    key: 'visuels',
-    label: 'VISUELS',
-    cssClass: 'stepper__phase--production',
-    screenIds: ['screen-7', 'screen-8', 'screen-9', 'screen-10', 'screen-11', 'screen-12', 'screen-13'],
-  },
-];
+/* Phases supprimées — le stepper est une liste plate d'étapes */
 
 /**
  * Initialise le stepper
@@ -55,7 +32,7 @@ function initStepper(screens, appState) {
 }
 
 /**
- * Génère le stepper desktop avec phases groupées
+ * Génère le stepper desktop — liste plate d'étapes sans labels de phase
  */
 function renderStepper() {
   if (!stepperContainer) return;
@@ -63,64 +40,36 @@ function renderStepper() {
   const visible = getVisibleScreens();
   stepperContainer.innerHTML = '';
 
-  STEPPER_PHASES.forEach((phase, phaseIndex) => {
-    // Filtrer les écrans de cette phase qui sont visibles
-    const phaseScreens = visible.filter(s => phase.screenIds.includes(s.id));
-    if (phaseScreens.length === 0) return;
+  visible.forEach((screen, i) => {
+    const step = document.createElement('div');
+    step.className = 'stepper__step';
+    step.dataset.screenId = screen.id;
 
-    // Séparateur entre phases (sauf la première)
-    if (phaseIndex > 0) {
-      const divider = document.createElement('div');
-      divider.className = 'stepper__phase-divider';
-      stepperContainer.appendChild(divider);
-    }
+    const number = document.createElement('span');
+    number.className = 'stepper__number';
+    number.textContent = i + 1;
+    step.appendChild(number);
 
-    // Conteneur de phase
-    const phaseEl = document.createElement('div');
-    phaseEl.className = `stepper__phase ${phase.cssClass}`;
+    const label = document.createElement('span');
+    label.className = 'stepper__label';
+    label.textContent = screen.label;
+    step.appendChild(label);
 
-    // Label de phase
-    const phaseLabel = document.createElement('span');
-    phaseLabel.className = 'stepper__phase-label';
-    phaseLabel.textContent = phase.label;
-    phaseEl.appendChild(phaseLabel);
-
-    // Étapes dans cette phase
-    phaseScreens.forEach((screen, i) => {
-      const globalIndex = visible.indexOf(screen);
-
-      const step = document.createElement('div');
-      step.className = 'stepper__step';
-      step.dataset.screenId = screen.id;
-
-      const number = document.createElement('span');
-      number.className = 'stepper__number';
-      number.textContent = globalIndex + 1;
-      step.appendChild(number);
-
-      const label = document.createElement('span');
-      label.className = 'stepper__label';
-      label.textContent = screen.label;
-      step.appendChild(label);
-
-      // Clic pour naviguer vers toute étape déjà visitée
-      step.addEventListener('click', () => {
-        if (globalIndex <= stepperMaxVisited) {
-          navigateTo(screen.id);
-        }
-      });
-
-      phaseEl.appendChild(step);
-
-      // Connecteur entre étapes (sauf la dernière de la phase)
-      if (i < phaseScreens.length - 1) {
-        const connector = document.createElement('div');
-        connector.className = 'stepper__connector';
-        phaseEl.appendChild(connector);
+    // Clic pour naviguer vers toute étape déjà visitée
+    step.addEventListener('click', () => {
+      if (i <= stepperMaxVisited) {
+        navigateTo(screen.id);
       }
     });
 
-    stepperContainer.appendChild(phaseEl);
+    stepperContainer.appendChild(step);
+
+    // Connecteur entre étapes (sauf la dernière)
+    if (i < visible.length - 1) {
+      const connector = document.createElement('div');
+      connector.className = 'stepper__connector';
+      stepperContainer.appendChild(connector);
+    }
   });
 
   updateStepper(stepperAppState.currentScreen);

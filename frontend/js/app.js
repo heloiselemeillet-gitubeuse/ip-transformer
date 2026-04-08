@@ -900,7 +900,11 @@ function displayCanon(canon) {
   // Charger les refs existantes depuis IndexedDB
   loadCharacterRefs();
 
-  // Le bouton Continuer est activé par saveCanon()
+  // Activer le bouton Continuer si l'ID IP contient des données
+  const nextBtn = document.getElementById('btn-next-screen3b');
+  if (nextBtn && canon && (canon.synopsis || canon.characters)) {
+    nextBtn.disabled = false;
+  }
 }
 
 /**
