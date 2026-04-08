@@ -47,7 +47,6 @@ async function replicateStartFluxRedux(params) {
         aspect_ratio: aspectRatio,
         num_outputs: 1,
         output_format: 'webp',
-        go_fast: true,
       };
 
   const response = await fetch(`${REPLICATE_WORKER}/predict`, {
@@ -57,7 +56,8 @@ async function replicateStartFluxRedux(params) {
   });
 
   if (!response.ok) {
-    throw new Error(`Erreur Replicate : ${response.status} ${response.statusText}`);
+    const errBody = await response.text();
+    throw new Error(`Erreur Replicate : ${response.status} — ${errBody}`);
   }
 
   const data = await response.json();
