@@ -5,7 +5,8 @@
  * Styles visuels disponibles selon le mode
  */
 const VISUAL_STYLES = {
-  podcast: [
+  // Webtoon — styles d'illustration
+  'podcast-webtoon': [
     { id: 'manga', label: 'Manga / Manhwa', icon: '⚡', desc: 'Grands yeux, dynamisme, expressions codifiées, style webtoon coréen', prompt: 'manga art, Japanese manga illustration, anime cel-shaded style, bold ink outlines, large expressive eyes, 2D hand-drawn, manhwa webtoon aesthetic, vibrant flat colors, dynamic composition' },
     { id: 'semi-realistic', label: 'Semi-réaliste', icon: '📷', desc: 'Proportions proches du réel, détails soignés, éclairage cinématique', prompt: 'semi-realistic illustration, detailed proportions, cinematic lighting, polished details, digital painting' },
     { id: 'cartoon', label: 'Cartoon / Stylisé', icon: '🎨', desc: 'Formes simplifiées, expressivité exagérée, style ludique', prompt: 'cartoon style, bold outlines, flat colors, exaggerated expressions, playful, stylized' },
@@ -14,13 +15,34 @@ const VISUAL_STYLES = {
     { id: 'realistic', label: 'Réaliste', icon: '🎬', desc: 'Photoréaliste, rendu cinématique, haute fidélité', prompt: 'photorealistic, highly detailed, cinematic render, high fidelity, realistic lighting' },
     { id: 'sketch', label: 'Sketch / Rough', icon: '🖊️', desc: 'Trait visible, ambiance artistique, volontairement brut', prompt: 'sketch style, visible strokes, artistic rough look, hand-drawn feel, raw aesthetic' },
   ],
-  peinture: [
+  // Micro-drama — genres cinématographiques
+  'podcast-micro-drama': [
+    { id: 'drama', label: 'Drame', icon: '🎭', desc: 'Éclairage intimiste, émotions intenses, tons profonds', prompt: 'cinematic drama, intimate lighting, deep emotions, warm shadows, close-up character shots, moody atmosphere, film grain' },
+    { id: 'thriller', label: 'Thriller / Suspense', icon: '🔪', desc: 'Tension, ombres marquées, cadrage serré, ambiance oppressante', prompt: 'thriller cinematography, high contrast lighting, deep shadows, tense atmosphere, dutch angles, suspenseful mood, dark color grading' },
+    { id: 'romance', label: 'Romance', icon: '💕', desc: 'Lumière douce, tons chauds, ambiance rêveuse et poétique', prompt: 'romantic cinematic style, soft golden lighting, warm tones, dreamy atmosphere, lens flare, shallow depth of field, tender mood' },
+    { id: 'scifi', label: 'Science-Fiction', icon: '🚀', desc: 'Futuriste, néons, technologie avancée, ambiance cyberpunk ou spatiale', prompt: 'science fiction cinematic, futuristic environment, neon lighting, advanced technology, cyberpunk aesthetic, holographic displays, dark moody atmosphere' },
+    { id: 'action', label: 'Action', icon: '💥', desc: 'Dynamique, mouvement, couleurs vives, rythme soutenu', prompt: 'action movie cinematography, dynamic camera angles, motion blur, vivid saturated colors, explosive energy, fast-paced, dramatic lighting' },
+    { id: 'documentary', label: 'Documentaire', icon: '📹', desc: 'Authentique, naturel, réaliste, cadrage journalistique', prompt: 'documentary style, natural lighting, realistic, handheld camera feel, authentic atmosphere, journalistic framing, raw unfiltered look' },
+    { id: 'comedy', label: 'Comédie', icon: '😄', desc: 'Lumière claire, couleurs vives, ambiance légère et joyeuse', prompt: 'comedy cinematic style, bright even lighting, vivid cheerful colors, lighthearted atmosphere, warm tones, playful composition' },
+    { id: 'noir', label: 'Film Noir', icon: '🌑', desc: 'Noir et blanc, contrastes extrêmes, ombres dramatiques', prompt: 'film noir style, high contrast black and white, dramatic shadows, venetian blind lighting, smoke, mysterious atmosphere, 1940s aesthetic' },
+  ],
+  // Webtoon peinture
+  'peinture-webtoon': [
     { id: 'faithful', label: 'Fidèle à l\'artiste', icon: '🖼️', desc: 'Technique et palette fidèles à l\'original', prompt: 'faithful to the original art style, same technique and palette' },
     { id: 'manga', label: 'Manga / Manhwa', icon: '⚡', desc: 'Adaptation manga, dynamisme, style webtoon', prompt: 'manga art, Japanese manga illustration, anime cel-shaded style, bold ink outlines, large expressive eyes, 2D hand-drawn, manhwa webtoon aesthetic, vibrant flat colors, dynamic composition' },
     { id: 'semi-realistic', label: 'Semi-réaliste', icon: '📷', desc: 'Réalisme pictural, détaillé, artistique', prompt: 'semi-realistic illustration, painterly, detailed, artistic' },
     { id: 'flat-design', label: 'Flat design', icon: '🖌️', desc: 'Aplats de couleur, minimalisme, moderne', prompt: 'flat design illustration, solid colors, minimalist, modern' },
     { id: 'expressionist', label: 'Expressionniste', icon: '🔥', desc: 'Coups de pinceau marqués, émotionnel, dramatique', prompt: 'expressionist style, bold brushstrokes, emotional, dramatic' },
     { id: 'ligne-claire', label: 'Ligne claire', icon: '✏️', desc: 'Contours nets, lisibilité maximale', prompt: 'ligne claire style, clear outlines, minimal shading, clean illustration' },
+  ],
+  // Micro-drama peinture
+  'peinture-micro-drama': [
+    { id: 'faithful-cine', label: 'Fidèle + Cinéma', icon: '🖼️', desc: 'Style de l\'artiste avec mise en scène cinématique', prompt: 'faithful to original art style, cinematic composition, dramatic lighting, film-like atmosphere, same palette as original artwork' },
+    { id: 'drama', label: 'Drame', icon: '🎭', desc: 'Éclairage intimiste, émotions intenses, tons profonds', prompt: 'cinematic drama, intimate lighting, deep emotions, warm shadows, moody atmosphere, film grain' },
+    { id: 'romance', label: 'Romance', icon: '💕', desc: 'Lumière douce, tons chauds, ambiance rêveuse', prompt: 'romantic cinematic style, soft golden lighting, warm tones, dreamy atmosphere, lens flare, tender mood' },
+    { id: 'scifi', label: 'Science-Fiction', icon: '🚀', desc: 'Futuriste, néons, ambiance cyberpunk ou spatiale', prompt: 'science fiction cinematic, futuristic, neon lighting, cyberpunk aesthetic, dark moody atmosphere' },
+    { id: 'action', label: 'Action', icon: '💥', desc: 'Dynamique, couleurs vives, rythme soutenu', prompt: 'action movie cinematography, dynamic angles, vivid colors, explosive energy, dramatic lighting' },
+    { id: 'expressionist', label: 'Expressionniste', icon: '🔥', desc: 'Coups de pinceau dramatiques, émotionnel', prompt: 'expressionist cinematic style, bold brushstrokes, emotional, dramatic lighting, painterly film look' },
   ],
 };
 
@@ -47,6 +69,19 @@ let selectedTemperature = null;
 let selectedContrast = null;
 
 /**
+ * Retourne la clé de styles adaptée au mode + format de sortie
+ * Ex: 'podcast-webtoon', 'peinture-micro-drama'
+ */
+function getStyleKey() {
+  const mode = AppState.mode || 'podcast';
+  const output = AppState.outputFormat || 'webtoon';
+  // Pour "both", on affiche les styles webtoon par défaut
+  const effectiveOutput = output === 'both' ? 'webtoon' : output;
+  const key = `${mode}-${effectiveOutput}`;
+  return VISUAL_STYLES[key] ? key : `${mode}-webtoon`;
+}
+
+/**
  * Initialise l'écran 6 — affiche les styles et la palette
  */
 function initScreen6() {
@@ -65,8 +100,7 @@ function initScreen6() {
  * Affiche les 4 cartes de style visuel
  */
 function renderStyleCards() {
-  const mode = AppState.mode || 'podcast';
-  const styles = VISUAL_STYLES[mode] || VISUAL_STYLES.podcast;
+  const styles = VISUAL_STYLES[getStyleKey()];
   const container = document.getElementById('style-cards');
   if (!container) return;
 
@@ -90,8 +124,7 @@ function renderStyleCards() {
  * @param {string} styleId — id du style
  */
 async function generateStylePreview(styleId) {
-  const mode = AppState.mode || 'podcast';
-  const styles = VISUAL_STYLES[mode] || VISUAL_STYLES.podcast;
+  const styles = VISUAL_STYLES[getStyleKey()];
   const style = styles.find(s => s.id === styleId);
   if (!style) return;
 
@@ -217,8 +250,7 @@ function checkScreen6Ready() {
 
   if (ready) {
     // Sauvegarder les choix visuels
-    const mode = AppState.mode || 'podcast';
-    const styles = VISUAL_STYLES[mode] || VISUAL_STYLES.podcast;
+    const styles = VISUAL_STYLES[getStyleKey()];
     const style = styles.find(s => s.id === selectedStyle);
 
     State.visualStyle = {
