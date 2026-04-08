@@ -57,10 +57,12 @@ function initScreen9() {
     State.selectedMusic = trackId;
     State.save();
     updateCostEstimate();
+    checkScreen9Ready();
   });
 
   // Mettre à jour l'estimation de coût
   updateCostEstimate();
+  checkScreen9Ready();
 }
 
 /**
@@ -274,15 +276,15 @@ function applyConfigToAll() {
 }
 
 /**
- * Vérifie si l'écran 9 est prêt (EP1 configuré + musique choisie)
+ * Vérifie si l'écran 9 est prêt
+ * Condition : au moins 1 scène configurée (musique optionnelle pour le POC)
  */
 function checkScreen9Ready() {
-  const config1 = State.animationConfig && State.animationConfig[1];
-  const hasConfig = config1 && Object.keys(config1).length === 3; // 3 scènes
-  const hasMusic = !!State.selectedMusic;
+  const config = State.animationConfig || {};
+  const hasAnyConfig = Object.keys(config).some(ep => Object.keys(config[ep]).length > 0);
 
   const btn = document.getElementById('btn-next-screen9');
   if (btn) {
-    btn.disabled = !(hasConfig && hasMusic);
+    btn.disabled = !hasAnyConfig;
   }
 }

@@ -71,53 +71,115 @@ function selectMusicTrack(trackId, containerId) {
 }
 
 /**
+ * Génère un son synthétique via Web Audio API pour la preview
+ * Chaque ambiance a un pattern sonore distinct
+ */
+function generateMusicPreview(trackId) {
+  const ctx = new (window.AudioContext || window.webkitAudioContext)();
+  const gainNode = ctx.createGain();
+  gainNode.gain.value = 0.15;
+  gainNode.connect(ctx.destination);
+
+  // Patterns sonores par ambiance
+  const patterns = {
+    epic: { freq: [220, 330, 440, 550], type: 'sawtooth', tempo: 0.4 },
+    tension: { freq: [150, 160, 170, 180], type: 'sine', tempo: 0.6 },
+    melancholy: { freq: [262, 294, 330, 294], type: 'sine', tempo: 0.8 },
+    joyful: { freq: [330, 392, 440, 494], type: 'triangle', tempo: 0.3 },
+    mysterious: { freq: [196, 233, 220, 261], type: 'sine', tempo: 0.7 },
+    calm: { freq: [262, 330, 392, 330], type: 'sine', tempo: 1.0 },
+    dramatic: { freq: [196, 246, 293, 196], type: 'sawtooth', tempo: 0.5 },
+    urban: { freq: [330, 370, 440, 370], type: 'square', tempo: 0.25 },
+    nature: { freq: [392, 440, 494, 440], type: 'sine', tempo: 0.9 },
+    minimal: { freq: [440, 440, 523, 440], type: 'sine', tempo: 1.2 },
+  };
+
+  const pattern = patterns[trackId] || patterns.calm;
+  const notes = pattern.freq;
+  const duration = 4; // 4 secondes de preview
+
+  for (let i = 0; i < duration / pattern.tempo; i++) {
+    const osc = ctx.createOscillator();
+    osc.type = pattern.type;
+    osc.frequency.value = notes[i % notes.length];
+
+    const noteGain = ctx.createGain();
+    noteGain.gain.setValueAtTime(0, ctx.currentTime + i * pattern.tempo);
+    noteGain.gain.linearRampToValueAtTime(0.15, ctx.currentTime + i * pattern.tempo + 0.05);
+    noteGain.gain.linearRampToValueAtTime(0, ctx.currentTime + i * pattern.tempo + pattern.tempo * 0.8);
+
+    osc.connect(noteGain);
+    noteGain.connect(gainNode);
+
+    osc.start(ctx.currentTime + i * pattern.tempo);
+    osc.stop(ctx.currentTime + i * pattern.tempo + pattern.tempo);
+  }
+
+  // Retourner le contexte pour pouvoir l'arrêter
+  return { ctx, duration };
+}
+
+/** Timeout pour arrêter la preview */
+let previewTimeout = null;
+
+/**
  * Lance ou arrête la preview audio d'une track
  * @param {string} trackId — id de la track
  */
 function toggleMusicPreview(trackId) {
-  // Si c'est la même track, toggle pause/play
+  // Si c'est la même track, arrêter
   if (currentPreviewTrackId === trackId && currentPreviewAudio) {
-    if (currentPreviewAudio.paused) {
-      currentPreviewAudio.play();
-    } else {
-      currentPreviewAudio.pause();
-      currentPreviewAudio = null;
-      currentPreviewTrackId = null;
-    }
+    stopMusicPreview();
+    // Re-render pour mettre à jour l'icône
+    renderMusicSelector('music-selector', State.selectedMusic, (id) => {
+      State.selectedMusic = id;
+      State.save();
+      checkScreen9Ready();
+    });
     return;
   }
 
   // Arrêter la lecture en cours
   stopMusicPreview();
 
-  // Trouver la track
-  const track = MUSIC_LIBRARY.find(t => t.id === trackId);
-  if (!track) return;
-
-  // Lancer la lecture
-  currentPreviewAudio = new Audio(`assets/music/${track.file}`);
+  // Générer la preview synthétique
+  const preview = generateMusicPreview(trackId);
+  currentPreviewAudio = preview.ctx;
   currentPreviewTrackId = trackId;
-  currentPreviewAudio.volume = 0.5;
-  currentPreviewAudio.play().catch(() => {
-    // Fichier non trouvé — pas d'erreur bloquante (POC)
-    console.warn(`Fichier musique non trouvé : ${track.file}`);
-    currentPreviewAudio = null;
-    currentPreviewTrackId = null;
+
+  // Re-render pour mettre à jour l'icône ▶ → ⏸
+  renderMusicSelector('music-selector', State.selectedMusic, (id) => {
+    State.selectedMusic = id;
+    State.save();
+    checkScreen9Ready();
   });
 
-  // Arrêter à la fin
-  currentPreviewAudio.addEventListener('ended', () => {
-    currentPreviewAudio = null;
-    currentPreviewTrackId = null;
-  });
+  // Arrêter automatiquement après la durée
+  previewTimeout = setTimeout(() => {
+    stopMusicPreview();
+    renderMusicSelector('music-selector', State.selectedMusic, (id) => {
+      State.selectedMusic = id;
+      State.save();
+      checkScreen9Ready();
+    });
+  }, preview.duration * 1000 + 200);
 }
 
 /**
  * Arrête la preview audio en cours
  */
 function stopMusicPreview() {
+  if (previewTimeout) {
+    clearTimeout(previewTimeout);
+    previewTimeout = null;
+  }
   if (currentPreviewAudio) {
-    currentPreviewAudio.pause();
+    // Fermer le contexte Web Audio
+    if (currentPreviewAudio.close) {
+      currentPreviewAudio.close();
+    } else if (currentPreviewAudio.pause) {
+      currentPreviewAudio.pause();
+    }
     currentPreviewAudio = null;
     currentPreviewTrackId = null;
   }
