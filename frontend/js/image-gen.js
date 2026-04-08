@@ -319,81 +319,90 @@ async function generateImageBank() {
 }
 
 /**
- * Récupère le prompt de style complet (style + palette + ton + univers)
- * Fallback si State.visualStyle est null
+ * Récupère le contexte visuel complet depuis ID IP + style visuel choisi
+ * Priorité d'injection dans le prompt : 1. Style visuel, 2. Univers, 3. Palette, 4. Ton
  */
 function getFullStyleContext() {
   const vs = State.visualStyle || {};
   const canon = State.idIP || {};
 
-  // Style visuel (le plus important)
+  // 1. STYLE VISUEL (priorité max) — depuis le choix de style (écran visuel)
   let stylePrompt = vs.stylePrompt || '';
+  // Fallback : champ texte "style visuel" saisi dans ID IP (mode peinture)
   if (!stylePrompt && canon.visualStyle) {
     stylePrompt = canon.visualStyle;
   }
 
-  // Palette
-  const palette = (vs.temperature || vs.contrast)
-    ? `${vs.temperature || 'neutral'} palette, ${vs.contrast || 'contrasted'} lighting`
-    : '';
-
-  // Ton narratif → ambiance visuelle
-  const tone = canon.tone ? `mood: ${canon.tone}` : '';
-
-  // Univers → contexte visuel
+  // 2. UNIVERS — le champ textarea "Univers" de ID IP
   const universe = canon.universe || '';
 
-  return { stylePrompt, palette, tone, universe };
+  // 3. PALETTE — combiner les réglages du style picker + texte ID IP
+  const paletteParts = [];
+  if (vs.temperature) paletteParts.push(`${vs.temperature} tones`);
+  if (vs.contrast) paletteParts.push(`${vs.contrast} lighting`);
+  // Palette couleurs depuis ID IP (mode peinture)
+  if (canon.palette && Array.isArray(canon.palette)) {
+    const colorNames = canon.palette.map(p => p.name || p.color).filter(Boolean);
+    if (colorNames.length) paletteParts.push(`color palette: ${colorNames.join(', ')}`);
+  }
+  const palette = paletteParts.join(', ');
+
+  // 4. TON — le champ textarea "Ton & Style narratif" de ID IP
+  const tone = canon.tone || '';
+
+  return { stylePrompt, universe, palette, tone };
 }
 
 /**
  * Construit le prompt pour la banque d'images
+ * Ordre d'injection : 1. Style visuel, 2. Univers, 3. Palette, 4. Ton, puis sujet
+ * Chaque champ vient des vraies valeurs saisies dans ID IP
  */
 function buildBankPrompt({ style, palette, subject, description, type, tone, universe }) {
-  // Le style est LE cadre dominant — il enveloppe tout le prompt
   const styleTag = style || 'illustration';
-
-  // Détecter si le style est manga/anime pour renforcement spécial
   const isManga = /manga|anime|manhwa|webtoon/i.test(styleTag);
-
-  // Extraire un mot-clé court du style pour le renforcement
   const styleKeyword = isManga ? 'manga anime' : styleTag.split(',')[0].trim();
 
   const parts = [];
 
-  // DÉBUT : style dominant en premier (le plus important pour le modèle)
+  // ── 1. STYLE VISUEL (priorité max, en premier dans le prompt) ──
   if (isManga) {
-    parts.push('manga art, anime illustration, Japanese manga style, bold ink outlines, cel-shaded');
+    parts.push('manga art, anime illustration, Japanese manga style, bold ink outlines, cel-shaded, 2D hand-drawn');
   } else {
     parts.push(styleTag);
   }
 
-  // Sujet
-  parts.push(subject);
-
-  // Description courte
-  if (description) parts.push(description.substring(0, 200));
-
-  // Palette
-  if (palette) parts.push(palette);
-
-  // MILIEU : rappel du style
-  if (isManga) {
-    parts.push('drawn in manga style, 2D illustration, flat colors, expressive anime eyes');
-  } else {
-    parts.push(`rendered in ${styleKeyword}`);
+  // ── 2. UNIVERS (contexte du monde, ambiance générale) ──
+  if (universe) {
+    parts.push(universe.substring(0, 150));
   }
 
-  // Qualité adaptée au type
+  // ── 3. PALETTE DE COULEURS ──
+  if (palette) {
+    parts.push(palette);
+  }
+
+  // ── 4. TON (ambiance narrative → mood visuel) ──
+  if (tone) {
+    parts.push(`mood: ${tone.substring(0, 100)}`);
+  }
+
+  // ── SUJET (personnage ou lieu) ──
+  parts.push(subject);
+
+  // Description détaillée
+  if (description) parts.push(description.substring(0, 200));
+
+  // Rappel style + qualité
   if (type === 'character') {
     parts.push(`${styleKeyword} character design, high quality, detailed`);
   } else {
     parts.push(`${styleKeyword} environment, detailed background, high quality`);
   }
 
-  // FIN : renforcement final + anti-photo
+  // Renforcement final + anti-photo
   if (isManga) {
-    parts.push('consistent manga anime style, hand-drawn 2D look, NOT photorealistic, NOT 3D render, NOT photograph');
+    parts.push('consistent manga anime style, NOT photorealistic, NOT 3D render, NOT photograph');
   } else {
     parts.push(`consistent ${styleKeyword}, NOT photorealistic, NOT photo`);
   }
