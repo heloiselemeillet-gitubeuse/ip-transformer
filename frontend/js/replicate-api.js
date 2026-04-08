@@ -33,15 +33,20 @@ async function replicateStartFluxRedux(params) {
   const h = params.height || 1280;
   const aspectRatio = w === h ? '1:1' : (w > h ? '16:9' : '9:16');
 
+  // Seed aléatoire pour forcer des résultats différents à chaque appel
+  const randomSeed = Math.floor(Math.random() * 2147483647);
+
   const input = hasImageRef
     ? {
         redux_image: `data:image/png;base64,${params.imageRef}`,
         prompt: params.prompt,
         num_outputs: 1,
-        guidance: 3.5,
+        guidance: 6,
+        seed: randomSeed,
       }
     : {
         prompt: params.prompt,
+        seed: randomSeed,
       };
 
   // Retry avec backoff pour les 429 (rate limit)

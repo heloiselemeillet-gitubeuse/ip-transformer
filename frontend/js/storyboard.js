@@ -50,7 +50,7 @@ function selectStoryboardEpisode(episodeNum) {
  * @param {number} episodeNum
  */
 function displayStoryboard(episodeNum) {
-  const images = (State.generatedImages && State.generatedImages[episodeNum]) || [];
+  const images = getBankImagesForEpisode(episodeNum);
   const script = State.scripts ? State.scripts[episodeNum] : null;
   const scenes = (script && script.scenes) || [];
 
@@ -76,7 +76,7 @@ function displayStoryboard(episodeNum) {
               }
               <!-- Bulles de dialogue superposées -->
               ${dialogues.map((d, di) => `
-                <div class="storyboard-bubble" style="top:${20 + di * 25}%; ${di % 2 === 0 ? 'left:5%' : 'right:5%'}">
+                <div class="storyboard-bubble" style="bottom:${5 + di * 18}%; ${di % 2 === 0 ? 'left:5%' : 'right:5%'}">
                   <span class="storyboard-bubble__speaker">${d.speaker}</span>
                   <span class="storyboard-bubble__text">"${d.text}"</span>
                 </div>
@@ -102,7 +102,7 @@ function displayStoryboard(episodeNum) {
  * Lance le slideshow CSS : affiche les images une par une avec transition
  */
 function startSlideshow() {
-  const images = (State.generatedImages && State.generatedImages[currentStoryboardEpisode]) || [];
+  const images = getBankImagesForEpisode(currentStoryboardEpisode);
   const script = State.scripts ? State.scripts[currentStoryboardEpisode] : null;
   const scenes = (script && script.scenes) || [];
 
@@ -141,7 +141,7 @@ function startSlideshow() {
  * Passe à la slide suivante
  */
 function slideshowNext() {
-  const images = (State.generatedImages && State.generatedImages[currentStoryboardEpisode]) || [];
+  const images = getBankImagesForEpisode(currentStoryboardEpisode);
   if (images.length === 0) return;
 
   slideshowIndex = (slideshowIndex + 1) % images.length;
@@ -152,7 +152,7 @@ function slideshowNext() {
  * Passe à la slide précédente
  */
 function slideshowPrev() {
-  const images = (State.generatedImages && State.generatedImages[currentStoryboardEpisode]) || [];
+  const images = getBankImagesForEpisode(currentStoryboardEpisode);
   if (images.length === 0) return;
 
   slideshowIndex = (slideshowIndex - 1 + images.length) % images.length;
@@ -163,7 +163,7 @@ function slideshowPrev() {
  * Met à jour l'affichage du slideshow
  */
 function updateSlideshow() {
-  const images = (State.generatedImages && State.generatedImages[currentStoryboardEpisode]) || [];
+  const images = getBankImagesForEpisode(currentStoryboardEpisode);
   const script = State.scripts ? State.scripts[currentStoryboardEpisode] : null;
   const scenes = (script && script.scenes) || [];
 
@@ -222,7 +222,7 @@ function stopSlideshow() {
  */
 function exportStoryboardHTML() {
   const episodeNum = currentStoryboardEpisode;
-  const images = (State.generatedImages && State.generatedImages[episodeNum]) || [];
+  const images = getBankImagesForEpisode(episodeNum);
   const script = State.scripts ? State.scripts[episodeNum] : null;
   const scenes = (script && script.scenes) || [];
   const episode = (State.episodes || [])[episodeNum - 1] || {};

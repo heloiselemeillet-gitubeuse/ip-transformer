@@ -181,21 +181,19 @@ async function generateWanClip(ep, sceneNum) {
   const scene = script.scenes[sceneNum - 1];
   const prompt = buildVideoPrompt(scene);
 
-  // Récupérer l'image de référence depuis les images générées (écran 7)
+  // Récupérer l'image de référence depuis la banque d'images
   let imageRef = null;
-  const genImages = State.generatedImages && State.generatedImages[ep];
+  const genImages = getBankImagesForEpisode(ep);
   if (genImages) {
-    const img = genImages.find(g => g.sceneIndex === sceneNum - 1 && g.status === 'approved');
+    const img = genImages.find(g => g.sceneIndex === sceneNum - 1);
     if (img && img.url) {
-      // Charger l'image et convertir en base64
+      // Convertir l'URL en base64 pour Wan
       try {
-        const imgData = await dbGet(STORES.IMAGES, `ep${ep}-scene${sceneNum}`);
-        if (imgData) {
-          const blob = new Blob([imgData.data], { type: imgData.type || 'image/png' });
-          imageRef = await blobToBase64(blob);
-        }
+        const response = await fetch(img.url);
+        const blob = await response.blob();
+        imageRef = await blobToBase64(blob);
       } catch (e) {
-        console.warn('Image de référence non trouvée en local, continuera sans', e);
+        console.warn('Image de référence non chargeable, continuera sans', e);
       }
     }
   }
@@ -252,7 +250,7 @@ async function generateKenBurnsClip(ep, sceneNum) {
 
   // Récupérer l'image source (générée à l'écran 7)
   let imageUrl = null;
-  const genImages = State.generatedImages && State.generatedImages[ep];
+  const genImages = getBankImagesForEpisode(ep);
   if (genImages) {
     const img = genImages.find(g => g.sceneIndex === sceneNum - 1);
     if (img) imageUrl = img.url;

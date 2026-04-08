@@ -259,38 +259,67 @@
 
           <!-- Synopsis -->
           <div class="card">
-            <h3 class="card__title">Synopsis</h3>
+            <div class="card__title-row">
+              <h3 class="card__title">Synopsis</h3>
+              <button class="btn btn--small btn--secondary btn--regen" onclick="regenBlock('synopsis')">Régénérer</button>
+            </div>
             <div id="canon-synopsis" class="story-text"></div>
           </div>
 
           <!-- Arcs narratifs -->
           <div class="card">
-            <h3 class="card__title">Arcs narratifs</h3>
+            <div class="card__title-row">
+              <h3 class="card__title">Arcs narratifs</h3>
+              <button class="btn btn--small btn--secondary btn--regen" onclick="regenBlock('arcs')">Régénérer</button>
+            </div>
             <div id="canon-arcs" class="arcs-list"></div>
           </div>
 
           <!-- Personnages avec références visuelles -->
           <div class="card">
-            <h3 class="card__title">Personnages</h3>
+            <div class="card__title-row">
+              <h3 class="card__title">Personnages</h3>
+              <button class="btn btn--small btn--secondary btn--regen" onclick="regenBlock('characters')">Régénérer</button>
+            </div>
             <p class="card__desc">Uploadez une photo de référence pour chaque personnage (optionnel mais recommandé).</p>
             <div id="canon-characters" class="canon-characters"></div>
           </div>
 
+          <!-- Décors & Lieux clés -->
+          <div class="card">
+            <div class="card__title-row">
+              <h3 class="card__title">Décors & Lieux clés</h3>
+              <button class="btn btn--small btn--secondary btn--regen" onclick="regenBlock('locations')">Régénérer</button>
+            </div>
+            <p class="card__desc">Ajoutez les lieux importants de votre histoire. Uploadez une photo de référence pour chaque lieu (optionnel).</p>
+            <div id="canon-locations" class="canon-characters"></div>
+            <button class="btn btn--small btn--secondary" onclick="addLocation()" style="margin-top:12px">+ Ajouter un lieu</button>
+          </div>
+
           <!-- Univers -->
           <div class="card">
-            <h3 class="card__title">Univers</h3>
+            <div class="card__title-row">
+              <h3 class="card__title">Univers</h3>
+              <button class="btn btn--small btn--secondary btn--regen" onclick="regenBlock('universe')">Régénérer</button>
+            </div>
             <textarea id="canon-universe" class="textarea" rows="4" placeholder="Description de l'univers…"></textarea>
           </div>
 
           <!-- Ton & Style -->
           <div class="card">
-            <h3 class="card__title">Ton & Style narratif</h3>
+            <div class="card__title-row">
+              <h3 class="card__title">Ton & Style narratif</h3>
+              <button class="btn btn--small btn--secondary btn--regen" onclick="regenBlock('tone')">Régénérer</button>
+            </div>
             <textarea id="canon-tone" class="textarea" rows="3" placeholder="Ton, registre de langue, ambiance…"></textarea>
           </div>
 
           <!-- Contraintes -->
           <div class="card">
-            <h3 class="card__title">Contraintes & Interdits</h3>
+            <div class="card__title-row">
+              <h3 class="card__title">Contraintes & Interdits</h3>
+              <button class="btn btn--small btn--secondary btn--regen" onclick="regenBlock('constraints')">Régénérer</button>
+            </div>
             <textarea id="canon-constraints" class="textarea" rows="3" placeholder="Ce que l'IA ne doit PAS faire…"></textarea>
           </div>
 
@@ -417,26 +446,37 @@
     <section id="screen-7" class="screen">
       <div class="screen__content">
 
-        <h2 class="screen__title">Génération d'images</h2>
-        <p class="screen__desc">3 images par épisode. Approuvez ou régénérez chaque image.</p>
-
-        <!-- Onglets épisodes -->
-        <div class="episode-tabs" id="gen-tabs"></div>
+        <h2 class="screen__title">Banque d'images</h2>
+        <p class="screen__desc">
+          Générez les visuels de vos personnages et décors dans le style choisi.
+          Ces images serviront de base pour tous les épisodes.
+        </p>
 
         <!-- Zone de chargement -->
         <div id="screen-7-loading"></div>
 
         <!-- Résultat -->
         <div id="screen-7-result" style="display: none;">
-          <div id="gen-images-grid" class="gen-images-grid"></div>
+
+          <!-- Personnages -->
+          <div class="card">
+            <h3 class="card__title">Personnages</h3>
+            <p class="card__desc">1 image par personnage, transformée dans le style choisi.</p>
+            <div id="bank-characters-grid" class="gen-images-grid"></div>
+          </div>
+
+          <!-- Décors / Lieux -->
+          <div class="card">
+            <h3 class="card__title">Décors & Lieux</h3>
+            <p class="card__desc">3 images par lieu (jour, coucher de soleil, nuit).</p>
+            <div id="bank-locations-grid" class="gen-images-grid"></div>
+          </div>
 
           <!-- Actions -->
           <div class="action-row">
-            <button class="btn btn--primary" id="btn-approve-all" onclick="approveAllImages(currentGenEpisode)" style="display: none;">
+            <button class="btn btn--secondary" onclick="resetBankSlots()">Actualiser depuis ID IP</button>
+            <button class="btn btn--primary" id="btn-approve-all-bank" onclick="approveAllBank()" style="display: none;">
               ✓ Tout approuver
-            </button>
-            <button class="btn btn--secondary" id="btn-auto-batch" onclick="startAutoBatch()" style="display: none;">
-              Auto-batch épisodes 2-5
             </button>
           </div>
         </div>

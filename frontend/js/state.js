@@ -34,8 +34,9 @@ const State = {
   // Style visuel (set from screen-3b)
   visualStyle: null,      // { styleId, styleLabel, stylePrompt, temperature, contrast }
 
-  // Écran 7 — Images générées
-  generatedImages: null,  // { [episodeNum]: [{ url, status, sceneIndex, prompt }] }
+  // Écran 7 — Banque d'images
+  imageBank: null,        // { characters: [...], locations: [...] }
+  generatedImages: null,  // Legacy — kept for compatibility
 
   // Écran 9 — Config animation
   animationConfig: null,  // { [episodeNum]: { [sceneNum]: { type, kbDirection } } }
@@ -98,6 +99,7 @@ const State = {
     this.episodes = null;
     this.scripts = null;
     this.visualStyle = null;
+    this.imageBank = null;
     this.generatedImages = null;
     this.animationConfig = null;
     this.selectedMusic = null;

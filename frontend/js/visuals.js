@@ -6,16 +6,21 @@
  */
 const VISUAL_STYLES = {
   podcast: [
-    { id: 'manga', label: 'Manga', icon: '⚡', desc: 'Cel-shaded, couleurs vibrantes, compositions dynamiques', prompt: 'manga style, cel-shaded, vibrant colors, dynamic composition' },
-    { id: 'realistic', label: 'Réaliste', icon: '📷', desc: 'Photoréaliste, éclairage cinématique, haute qualité', prompt: 'photorealistic, detailed, cinematic lighting, high quality' },
-    { id: 'cartoon', label: 'Cartoon', icon: '🎨', desc: 'Traits gras, aplats de couleurs, style ludique', prompt: 'cartoon style, bold outlines, flat colors, playful' },
-    { id: 'manhwa', label: 'Manhwa', icon: '✨', desc: 'Esthétique webtoon coréen, ombrage doux, élégant', prompt: 'manhwa style, korean webtoon aesthetic, soft shading, elegant' },
+    { id: 'manga', label: 'Manga / Manhwa', icon: '⚡', desc: 'Grands yeux, dynamisme, expressions codifiées, style webtoon coréen', prompt: 'manga manhwa style, cel-shaded, vibrant colors, dynamic composition, expressive characters, korean webtoon aesthetic' },
+    { id: 'semi-realistic', label: 'Semi-réaliste', icon: '📷', desc: 'Proportions proches du réel, détails soignés, éclairage cinématique', prompt: 'semi-realistic illustration, detailed proportions, cinematic lighting, polished details, digital painting' },
+    { id: 'cartoon', label: 'Cartoon / Stylisé', icon: '🎨', desc: 'Formes simplifiées, expressivité exagérée, style ludique', prompt: 'cartoon style, bold outlines, flat colors, exaggerated expressions, playful, stylized' },
+    { id: 'flat-design', label: 'Flat design illustré', icon: '🖌️', desc: 'Aplats de couleur, minimalisme graphique, moderne', prompt: 'flat design illustration, solid colors, minimalist graphic style, modern, clean shapes' },
+    { id: 'ligne-claire', label: 'Ligne claire', icon: '✏️', desc: 'Contours nets, peu d\'ombre, lisibilité maximale', prompt: 'ligne claire style, clear outlines, minimal shading, maximum readability, clean illustration' },
+    { id: 'realistic', label: 'Réaliste', icon: '🎬', desc: 'Photoréaliste, rendu cinématique, haute fidélité', prompt: 'photorealistic, highly detailed, cinematic render, high fidelity, realistic lighting' },
+    { id: 'sketch', label: 'Sketch / Rough', icon: '🖊️', desc: 'Trait visible, ambiance artistique, volontairement brut', prompt: 'sketch style, visible strokes, artistic rough look, hand-drawn feel, raw aesthetic' },
   ],
   peinture: [
     { id: 'faithful', label: 'Fidèle à l\'artiste', icon: '🖼️', desc: 'Technique et palette fidèles à l\'original', prompt: 'faithful to the original art style, same technique and palette' },
-    { id: 'anime', label: 'Anime', icon: '⚡', desc: 'Adaptation animée, palette d\'origine conservée', prompt: 'anime adaptation, cel-shaded, maintaining original color palette' },
-    { id: 'stylized', label: 'Réaliste stylisé', icon: '🎭', desc: 'Réalisme pictural, détaillé, artistique', prompt: 'stylized realism, painterly, detailed, artistic' },
+    { id: 'manga', label: 'Manga / Manhwa', icon: '⚡', desc: 'Adaptation manga, dynamisme, style webtoon', prompt: 'manga manhwa style, cel-shaded, dynamic composition, korean webtoon aesthetic' },
+    { id: 'semi-realistic', label: 'Semi-réaliste', icon: '📷', desc: 'Réalisme pictural, détaillé, artistique', prompt: 'semi-realistic illustration, painterly, detailed, artistic' },
+    { id: 'flat-design', label: 'Flat design', icon: '🖌️', desc: 'Aplats de couleur, minimalisme, moderne', prompt: 'flat design illustration, solid colors, minimalist, modern' },
     { id: 'expressionist', label: 'Expressionniste', icon: '🔥', desc: 'Coups de pinceau marqués, émotionnel, dramatique', prompt: 'expressionist style, bold brushstrokes, emotional, dramatic' },
+    { id: 'ligne-claire', label: 'Ligne claire', icon: '✏️', desc: 'Contours nets, lisibilité maximale', prompt: 'ligne claire style, clear outlines, minimal shading, clean illustration' },
   ],
 };
 

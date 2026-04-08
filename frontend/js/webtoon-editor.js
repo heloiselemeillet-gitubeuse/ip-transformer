@@ -80,15 +80,16 @@ function loadWebtoonEditor(episodeNum) {
   if (!editor) return;
 
   const script = State.scripts && State.scripts[episodeNum];
-  const genImages = State.generatedImages && State.generatedImages[episodeNum];
+  // Construire les images depuis la banque d'images
+  const genImages = getBankImagesForEpisode(episodeNum);
 
   if (!script || !script.scenes) {
     editor.innerHTML = '<div class="card"><p class="status--error">Script de l\'épisode non trouvé.</p></div>';
     return;
   }
 
-  if (!genImages || genImages.length < 3) {
-    editor.innerHTML = '<div class="card"><p class="status--error">Images non générées. Retournez à l\'écran Génération.</p></div>';
+  if (!genImages || genImages.length === 0) {
+    editor.innerHTML = '<div class="card"><p class="status--error">Aucune image dans la banque. Retournez à l\'étape Banque d\'images.</p></div>';
     return;
   }
 
@@ -99,6 +100,16 @@ function loadWebtoonEditor(episodeNum) {
   }
 
   const data = State.webtoonData[episodeNum];
+
+  // Toujours rafraîchir les URLs depuis la banque (les URLs Replicate peuvent expirer)
+  if (data && data.panels && genImages.length > 0) {
+    data.panels.forEach((panel, i) => {
+      const bankImg = genImages[i] || genImages[i % genImages.length];
+      if (bankImg && bankImg.url) {
+        panel.imageUrl = bankImg.url;
+      }
+    });
+  }
   renderWebtoonStrip(editor, data, episodeNum);
   updatePreview(episodeNum);
 }
@@ -120,7 +131,7 @@ function initWebtoonEpisodeData(episodeNum, script, genImages) {
     // Créer les bulles à partir des dialogues
     const bubbles = (scene.dialogue || []).slice(0, 2).map((d, bi) => {
       // Placement auto : bulles en bas de l'image pour ne pas masquer les visages
-      const yPercent = 65 + (bi * 10); // démarrer à 65%, espacement 10%
+      const yPercent = 75 + (bi * 8); // démarrer à 75%, espacement 8% — en bas de l'image
       const xPercent = bi % 2 === 0 ? 5 : 50; // alternance gauche/droite
 
       // Couleur par intervenant (mode podcast)

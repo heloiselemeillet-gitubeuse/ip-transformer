@@ -12,7 +12,7 @@ const SCREENS = [
   { id: 'screen-3b', label: 'ID IP', step: 3 },
   { id: 'screen-4', label: 'Épisodes', step: 4 },
   { id: 'screen-5', label: 'Scripts', step: 5 },
-  { id: 'screen-7', label: 'Images', step: 6, branch: 'both' },
+  { id: 'screen-7', label: 'Banque images', step: 6, branch: 'both' },
   { id: 'screen-8', label: 'Storyboard', step: 7, branch: 'both' },
   { id: 'screen-9', label: 'Animation', step: 8, branch: 'micro-drama' },
   { id: 'screen-10', label: 'Clips', step: 9, branch: 'micro-drama' },
@@ -793,7 +793,10 @@ FORMAT DE RÉPONSE (JSON strict) :
   "arcs": [
     { "title": "Titre de l'arc", "description": "Description de l'arc narratif" }
   ],
-  "universe": "Description détaillée de l'univers (lieux, époque, atmosphère, règles)",
+  "locations": [
+    { "name": "Nom du lieu", "description": "Description visuelle détaillée (architecture, couleurs, lumière, ambiance, éléments clés)" }
+  ],
+  "universe": "Description détaillée de l'univers (époque, atmosphère, règles)",
   "tone": "Ton narratif, registre de langue, ambiance émotionnelle",
   "constraints": "Ce que l'IA ne doit JAMAIS faire (interdits narratifs et visuels)",
   "visualStyle": "Style visuel global à respecter pour les images",
@@ -872,6 +875,9 @@ function displayCanon(canon) {
     </div>
   `).join('');
 
+  // Décors & Lieux clés
+  displayLocations(canon.locations || []);
+
   // Champs éditables
   document.getElementById('canon-universe').value = canon.universe || '';
   document.getElementById('canon-tone').value = canon.tone || '';
@@ -939,6 +945,103 @@ async function loadCharacterRefs() {
 }
 
 /**
+ * Affiche les lieux/décors avec zone d'upload
+ * @param {Array} locations — tableau de lieux depuis le ID IP
+ */
+function displayLocations(locations) {
+  const container = document.getElementById('canon-locations');
+  if (!container) return;
+
+  // Si pas de lieux détectés, en proposer 3 vides
+  if (!locations || locations.length === 0) {
+    locations = [
+      { name: 'Lieu principal', description: '' },
+      { name: 'Lieu secondaire', description: '' },
+    ];
+    // Sauvegarder dans State
+    if (State.idIP) State.idIP.locations = locations;
+  }
+
+  container.innerHTML = locations.map((loc, i) => `
+    <div class="canon-character" data-loc-index="${i}">
+      <div class="canon-character__header">
+        <div class="character-card__avatar" style="background:var(--accent-secondary)">
+          📍
+        </div>
+        <div>
+          <input type="text" class="input input--inline canon-loc-name" data-loc-index="${i}"
+            value="${loc.name || ''}" placeholder="Nom du lieu">
+        </div>
+      </div>
+      <div class="canon-character__body">
+        <textarea class="textarea textarea--small canon-loc-desc" rows="2" data-loc-index="${i}"
+          placeholder="Description du lieu, ambiance, couleurs…">${loc.description || ''}</textarea>
+        <div class="canon-character__ref">
+          <label class="upload-zone upload-zone--mini" id="loc-ref-zone-${i}">
+            <input type="file" accept="image/*" onchange="handleLocRefUpload(event, ${i})" hidden>
+            <div class="upload-zone__content">
+              <span class="upload-zone__text">Photo de référence</span>
+            </div>
+          </label>
+          <div class="canon-character__ref-preview" id="loc-ref-preview-${i}"></div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+
+  loadLocationRefs();
+}
+
+/**
+ * Ajoute un nouveau lieu vide
+ */
+function addLocation() {
+  const canon = State.idIP || {};
+  if (!canon.locations) canon.locations = [];
+  canon.locations.push({ name: '', description: '' });
+  State.idIP = canon;
+  displayLocations(canon.locations);
+}
+
+/**
+ * Upload d'une photo de référence pour un lieu
+ */
+async function handleLocRefUpload(event, locIndex) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const arrayBuffer = await file.arrayBuffer();
+  const blob = new Blob([arrayBuffer], { type: file.type });
+  const url = URL.createObjectURL(blob);
+
+  await dbSave(STORES.CHARACTER_REFS, {
+    charIndex: `loc-${locIndex}`,
+    name: file.name,
+    type: file.type,
+    data: arrayBuffer,
+  });
+
+  const previewEl = document.getElementById(`loc-ref-preview-${locIndex}`);
+  if (previewEl) previewEl.innerHTML = `<img src="${url}" alt="Lieu ${locIndex}" class="canon-ref-img">`;
+}
+
+/**
+ * Charge les photos de référence de lieux depuis IndexedDB
+ */
+async function loadLocationRefs() {
+  const refs = await dbGetAll(STORES.CHARACTER_REFS);
+  for (const ref of refs) {
+    if (typeof ref.charIndex === 'string' && ref.charIndex.startsWith('loc-')) {
+      const locIndex = ref.charIndex.replace('loc-', '');
+      const blob = new Blob([ref.data], { type: ref.type });
+      const url = URL.createObjectURL(blob);
+      const previewEl = document.getElementById(`loc-ref-preview-${locIndex}`);
+      if (previewEl) previewEl.innerHTML = `<img src="${url}" alt="Lieu" class="canon-ref-img">`;
+    }
+  }
+}
+
+/**
  * Sauvegarde le ID IP avec les modifications de l'utilisateur
  */
 function saveCanon() {
@@ -972,6 +1075,21 @@ function saveCanon() {
     }
   });
 
+  // Récupérer les lieux édités
+  if (!canon.locations) canon.locations = [];
+  const locNames = document.querySelectorAll('.canon-loc-name');
+  const locDescs = document.querySelectorAll('.canon-loc-desc');
+  locNames.forEach(input => {
+    const idx = parseInt(input.dataset.locIndex);
+    if (!canon.locations[idx]) canon.locations[idx] = {};
+    canon.locations[idx].name = input.value;
+  });
+  locDescs.forEach(ta => {
+    const idx = parseInt(ta.dataset.locIndex);
+    if (!canon.locations[idx]) canon.locations[idx] = {};
+    canon.locations[idx].description = ta.value;
+  });
+
   // Sauvegarder
   State.idIP = canon;
   State.save();
@@ -998,6 +1116,61 @@ function saveCanon() {
 function regenerateCanon() {
   State.idIP = null;
   generateCanon();
+}
+
+/**
+ * Régénère un seul bloc du ID IP via Claude
+ * @param {string} blockName — synopsis, arcs, characters, locations, universe, tone, constraints
+ */
+async function regenBlock(blockName) {
+  const canon = State.idIP || {};
+  const analysisJSON = JSON.stringify(State.analysis, null, 2);
+
+  // Prompts spécifiques par bloc
+  const blockPrompts = {
+    synopsis: `À partir de l'analyse suivante, régénère UNIQUEMENT le synopsis (3-5 phrases). Contexte existant : univers="${canon.universe || ''}", ton="${canon.tone || ''}". Réponds en JSON : { "synopsis": "..." }\n\nANALYSE :\n${analysisJSON}`,
+    arcs: `À partir de l'analyse suivante, régénère UNIQUEMENT les arcs narratifs (3-5 arcs). Synopsis existant : "${canon.synopsis || ''}". Réponds en JSON : { "arcs": [{ "title": "...", "description": "..." }] }\n\nANALYSE :\n${analysisJSON}`,
+    characters: `À partir de l'analyse suivante, régénère UNIQUEMENT les personnages. IMPORTANT : descriptions visuelles TRÈS détaillées, PAS de clichés vestimentaires liés au métier, tenues décontractées et contemporaines. Réponds en JSON : { "characters": [{ "name": "...", "description": "Description physique détaillée", "personality": "...", "role": "...", "color": "#hex", "visualPrompt": "Prompt visuel optimisé" }] }\n\nANALYSE :\n${analysisJSON}`,
+    locations: `À partir de l'analyse suivante et du synopsis "${canon.synopsis || ''}", génère 3-5 lieux/décors clés pour l'histoire. Chaque lieu doit avoir une description visuelle riche. Réponds en JSON : { "locations": [{ "name": "Nom du lieu", "description": "Description visuelle détaillée (architecture, couleurs, lumière, ambiance)" }] }\n\nANALYSE :\n${analysisJSON}`,
+    universe: `À partir de l'analyse suivante, régénère UNIQUEMENT la description de l'univers (époque, atmosphère, règles, ambiance). Réponds en JSON : { "universe": "..." }\n\nANALYSE :\n${analysisJSON}`,
+    tone: `À partir de l'analyse suivante, régénère UNIQUEMENT le ton et style narratif. Réponds en JSON : { "tone": "..." }\n\nANALYSE :\n${analysisJSON}`,
+    constraints: `À partir de l'analyse suivante et du contexte (synopsis="${canon.synopsis || ''}"), régénère UNIQUEMENT les contraintes et interdits narratifs/visuels. Réponds en JSON : { "constraints": "..." }\n\nANALYSE :\n${analysisJSON}`,
+  };
+
+  const prompt = blockPrompts[blockName];
+  if (!prompt) return;
+
+  // Feedback visuel : spinner sur le bouton
+  const btn = document.querySelector(`[onclick="regenBlock('${blockName}')"]`);
+  const originalText = btn ? btn.textContent : '';
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = '...';
+  }
+
+  try {
+    const result = await callClaude(prompt);
+    const parsed = parseJSONResponse(result);
+
+    // Merger le résultat dans le canon existant
+    if (parsed[blockName] !== undefined) {
+      canon[blockName] = parsed[blockName];
+    }
+
+    State.idIP = canon;
+    State.save();
+
+    // Réafficher le bloc mis à jour
+    displayCanon(canon);
+
+  } catch (err) {
+    alert(`Erreur régénération ${blockName} : ${err.message}`);
+  }
+
+  if (btn) {
+    btn.disabled = false;
+    btn.textContent = originalText;
+  }
 }
 
 // ============================================
@@ -1054,9 +1227,12 @@ async function runEpisodes() {
 function buildEpisodesPrompt() {
   const canonJSON = JSON.stringify(State.idIP, null, 2);
 
-  const formatInfo = AppState.mode === 'podcast'
-    ? 'Format cible : WEBTOON (3 panneaux par épisode, narration visuelle avec bulles de dialogue)'
-    : 'Format cible : MICRO-DRAMA VIDÉO (3 sous-scènes de ~15 secondes par épisode, ~45s total)';
+  const fmt = AppState.outputFormat || 'webtoon';
+  const formatInfo = fmt === 'both'
+    ? 'Formats cibles : WEBTOON (3 panneaux par épisode, narration visuelle avec bulles) ET MICRO-DRAMA VIDÉO (3 sous-scènes de ~15s par épisode, ~45s total)'
+    : fmt === 'micro-drama'
+      ? 'Format cible : MICRO-DRAMA VIDÉO (3 sous-scènes de ~15 secondes par épisode, ~45s total)'
+      : 'Format cible : WEBTOON (3 panneaux par épisode, narration visuelle avec bulles de dialogue)';
 
   return `Tu es un scénariste sérialisé. Découpe l'histoire suivante en exactement 5 ÉPISODES.
 
@@ -1105,6 +1281,7 @@ function displayEpisodes(episodes) {
       <div class="episode-card__header">
         <span class="episode-card__number">EP ${ep.number || i + 1}</span>
         <input class="input episode-title-input" value="${(ep.title || '').replace(/"/g, '&quot;')}" data-ep="${i}" onchange="updateEpisodeField(${i}, 'title', this.value)">
+        <button class="btn btn--small btn--secondary btn--regen" onclick="regenEpisode(${i})" title="Régénérer cet épisode">Régénérer</button>
       </div>
       <div class="episode-card__hook">🎣 <strong>Hook :</strong>
         <textarea class="textarea episode-hook-input" rows="2" data-ep="${i}" onchange="updateEpisodeField(${i}, 'hook', this.value)">${ep.hook || ''}</textarea>
@@ -1134,6 +1311,64 @@ function updateEpisodeField(epIndex, field, value) {
   if (State.episodes && State.episodes[epIndex]) {
     State.episodes[epIndex][field] = value;
     State.save();
+  }
+}
+
+/**
+ * Régénère un seul épisode via Claude
+ * @param {number} epIndex — index de l'épisode (0-4)
+ */
+async function regenEpisode(epIndex) {
+  const episodes = State.episodes || [];
+  const epNum = epIndex + 1;
+  const canon = State.idIP || {};
+
+  // Feedback visuel
+  const btn = document.querySelector(`[onclick="regenEpisode(${epIndex})"]`);
+  if (btn) { btn.disabled = true; btn.textContent = '...'; }
+
+  // Contexte des autres épisodes pour cohérence
+  const otherEps = episodes.filter((_, i) => i !== epIndex).map(e =>
+    `EP${e.number}: "${e.title}" — ${e.summary}`
+  ).join('\n');
+
+  const prompt = `Tu es un scénariste sérialisé. Régénère UNIQUEMENT l'épisode ${epNum} (sur 5) de cette histoire.
+
+ID IP :
+${JSON.stringify(canon, null, 2)}
+
+ÉPISODES EXISTANTS (pour cohérence) :
+${otherEps}
+
+RÈGLES pour l'épisode ${epNum} :
+${epNum === 1 ? '- Épisode d\'ouverture : poser le décor et les personnages' : ''}
+${epNum === 5 ? '- Épisode final : conclure l\'histoire' : ''}
+- Arc complet (début, tension, résolution partielle)
+- Hook d'accroche et cliffhanger de fin
+- Rester FIDÈLE au ID IP
+
+FORMAT (JSON strict) :
+{
+  "number": ${epNum},
+  "title": "Titre",
+  "hook": "Accroche de début",
+  "summary": "Résumé détaillé (3-5 phrases)",
+  "cliffhanger": "Fin — pourquoi on veut la suite",
+  "keyFacts": ["Fait 1", "Fait 2", "Fait 3"]
+}`;
+
+  try {
+    const result = await callClaude(prompt);
+    const parsed = parseJSONResponse(result);
+
+    // Remplacer l'épisode
+    State.episodes[epIndex] = parsed;
+    State.save();
+
+    displayEpisodes(State.episodes);
+  } catch (err) {
+    alert(`Erreur régénération EP ${epNum} : ${err.message}`);
+    if (btn) { btn.disabled = false; btn.textContent = 'Régénérer'; }
   }
 }
 
@@ -1244,13 +1479,18 @@ function buildScriptPrompt(episodeNum) {
   const episode = (Array.isArray(episodes) ? episodes : []).find(e => (e.number || 0) === episodeNum) || episodes[episodeNum - 1];
   const episodeJSON = JSON.stringify(episode, null, 2);
 
-  const formatContext = AppState.mode === 'podcast'
-    ? `Format : WEBTOON — chaque sous-scène = 1 panneau de bande dessinée vertical.
-Inclure des DIALOGUES sous forme de bulles (citations réelles du podcast).
-Indiquer le placement des personnages et les expressions faciales.`
-    : `Format : MICRO-DRAMA VIDÉO — chaque sous-scène = 1 clip de ~15 secondes.
+  const fmt = AppState.outputFormat || 'webtoon';
+  const formatContext = fmt === 'both'
+    ? `Formats : WEBTOON + MICRO-DRAMA — chaque sous-scène sert à la fois de panneau de bande dessinée ET de clip vidéo (~15s).
+Inclure des DIALOGUES (bulles pour webtoon + voix-off pour vidéo).
+Indiquer le cadrage, les mouvements de caméra, les expressions faciales et les transitions.`
+    : fmt === 'micro-drama'
+      ? `Format : MICRO-DRAMA VIDÉO — chaque sous-scène = 1 clip de ~15 secondes.
 Décrire les MOUVEMENTS de caméra, les transitions, l'ambiance sonore.
-Indiquer les dialogues (voix-off ou sous-titres).`;
+Indiquer les dialogues (voix-off ou sous-titres).`
+      : `Format : WEBTOON — chaque sous-scène = 1 panneau de bande dessinée vertical.
+Inclure des DIALOGUES sous forme de bulles (citations réelles du podcast).
+Indiquer le placement des personnages et les expressions faciales.`;
 
   return `Tu es un scénariste professionnel. Écris le script détaillé de l'épisode ${episodeNum} avec exactement 3 SOUS-SCÈNES.
 

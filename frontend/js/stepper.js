@@ -10,6 +10,9 @@ let stepperMobileContainer = null;
 let stepperScreens = [];
 let stepperAppState = null;
 
+/** Index max atteint — permet la navigation libre vers toute étape déjà visitée */
+let stepperMaxVisited = 0;
+
 /**
  * Définition des 3 phases visuelles
  * Chaque phase regroupe des écrans par leur id
@@ -100,10 +103,9 @@ function renderStepper() {
       label.textContent = screen.label;
       step.appendChild(label);
 
-      // Clic pour naviguer vers étapes précédentes
+      // Clic pour naviguer vers toute étape déjà visitée
       step.addEventListener('click', () => {
-        const currentIndex = visible.findIndex(s => s.id === stepperAppState.currentScreen);
-        if (globalIndex <= currentIndex) {
+        if (globalIndex <= stepperMaxVisited) {
           navigateTo(screen.id);
         }
       });
@@ -132,12 +134,16 @@ function updateStepper(currentScreenId) {
   const visible = getVisibleScreens();
   const currentIndex = visible.findIndex(s => s.id === currentScreenId);
 
+  // Mettre à jour le max visité
+  if (currentIndex > stepperMaxVisited) {
+    stepperMaxVisited = currentIndex;
+  }
+
   // --- Desktop ---
   if (stepperContainer) {
     const steps = stepperContainer.querySelectorAll('.stepper__step');
     const connectors = stepperContainer.querySelectorAll('.stepper__connector');
 
-    let stepIndex = 0;
     steps.forEach((step) => {
       const screenId = step.dataset.screenId;
       const idx = visible.findIndex(s => s.id === screenId);
@@ -146,11 +152,14 @@ function updateStepper(currentScreenId) {
 
       if (idx === currentIndex) {
         step.classList.add('stepper__step--active');
-      } else if (idx < currentIndex) {
+      } else if (idx <= stepperMaxVisited) {
         step.classList.add('stepper__step--completed');
       } else {
         step.classList.add('stepper__step--upcoming');
       }
+
+      // Cursor cliquable pour les étapes visitées
+      step.style.cursor = idx <= stepperMaxVisited ? 'pointer' : 'default';
     });
 
     // Connecteurs : on les indexe globalement
