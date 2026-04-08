@@ -529,12 +529,58 @@ FORMAT DE RÉPONSE (JSON strict) :
  */
 async function convertPaintingsToBase64(paintings) {
   const images = [];
-  for (const painting of paintings) {
+  // Limiter à 5 images max pour rester sous la limite Claude (20MB)
+  const maxImages = Math.min(paintings.length, 5);
+  for (let i = 0; i < maxImages; i++) {
+    const painting = paintings[i];
     const blob = new Blob([painting.data], { type: painting.type });
-    const base64 = await blobToBase64(blob);
-    images.push(base64);
+    // Redimensionner si trop grosse (max 1024px de côté)
+    const resized = await resizeImageBlob(blob, 1024);
+    const base64 = await blobToBase64(resized);
+    // Le Worker attend { base64, mediaType } — pas juste une string
+    images.push({
+      base64,
+      mediaType: 'image/jpeg',
+    });
   }
   return images;
+}
+
+/**
+ * Redimensionne une image blob si elle dépasse maxSize px
+ * @param {Blob} blob — image originale
+ * @param {number} maxSize — taille max en px (largeur ou hauteur)
+ * @returns {Promise<Blob>} — image redimensionnée en JPEG
+ */
+function resizeImageBlob(blob, maxSize) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      let { width, height } = img;
+      // Ne redimensionner que si nécessaire
+      if (width <= maxSize && height <= maxSize) {
+        // Convertir quand même en JPEG pour uniformiser
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        canvas.toBlob(b => resolve(b), 'image/jpeg', 0.85);
+        return;
+      }
+      const ratio = Math.min(maxSize / width, maxSize / height);
+      const newW = Math.round(width * ratio);
+      const newH = Math.round(height * ratio);
+      const canvas = document.createElement('canvas');
+      canvas.width = newW;
+      canvas.height = newH;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, newW, newH);
+      canvas.toBlob(b => resolve(b), 'image/jpeg', 0.85);
+    };
+    img.onerror = reject;
+    img.src = URL.createObjectURL(blob);
+  });
 }
 
 /**

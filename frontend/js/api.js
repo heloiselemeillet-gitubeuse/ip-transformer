@@ -41,7 +41,12 @@ async function callClaude(prompt, options = {}) {
   });
 
   if (!response.ok) {
-    throw new Error(`Erreur Claude API : ${response.status} ${response.statusText}`);
+    let errDetail = response.statusText;
+    try {
+      const errBody = await response.json();
+      errDetail = errBody.error || JSON.stringify(errBody);
+    } catch {}
+    throw new Error(`Erreur Claude API : ${response.status} — ${errDetail}`);
   }
 
   return response.json();
