@@ -1576,6 +1576,9 @@ function displayScript(script) {
       </div>
     </div>
   `).join('');
+
+  // Activer le bouton Continuer si au moins un script existe
+  checkAllScriptsDone();
 }
 
 /**
