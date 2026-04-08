@@ -35,33 +35,39 @@ async function replicateStartFluxRedux(params) {
 
   const input = hasImageRef
     ? {
+        redux_image: `data:image/png;base64,${params.imageRef}`,
         prompt: params.prompt,
-        image: `data:image/png;base64,${params.imageRef}`,
-        width: w,
-        height: h,
         num_outputs: 1,
-        guidance_scale: 3.5,
+        guidance: 3.5,
       }
     : {
         prompt: params.prompt,
-        aspect_ratio: aspectRatio,
-        num_outputs: 1,
-        output_format: 'webp',
       };
 
-  const response = await fetch(`${REPLICATE_WORKER}/predict`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ model, input }),
-  });
+  // Retry avec backoff pour les 429 (rate limit)
+  const MAX_RETRIES = 3;
+  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+    const response = await fetch(`${REPLICATE_WORKER}/predict`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model, input }),
+    });
 
-  if (!response.ok) {
-    const errBody = await response.text();
-    throw new Error(`Erreur Replicate : ${response.status} — ${errBody}`);
+    if (response.status === 429 && attempt < MAX_RETRIES) {
+      const waitSec = Math.pow(2, attempt + 1); // 2s, 4s, 8s
+      console.log(`Rate limit 429 — retry ${attempt + 1}/${MAX_RETRIES} dans ${waitSec}s…`);
+      await new Promise(r => setTimeout(r, waitSec * 1000));
+      continue;
+    }
+
+    if (!response.ok) {
+      const errBody = await response.text();
+      throw new Error(`Erreur Replicate : ${response.status} — ${errBody}`);
+    }
+
+    const data = await response.json();
+    return data.prediction_id || data.id;
   }
-
-  const data = await response.json();
-  return data.prediction_id || data.id;
 }
 
 /**

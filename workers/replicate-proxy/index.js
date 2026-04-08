@@ -97,7 +97,6 @@ async function handlePredict(request, env, corsHeaders) {
     headers: {
       'Authorization': `Bearer ${env.REPLICATE_API_TOKEN}`,
       'Content-Type': 'application/json',
-      'Prefer': 'respond-async',
     },
     body: JSON.stringify({
       input: input,
